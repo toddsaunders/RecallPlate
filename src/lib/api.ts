@@ -21,12 +21,10 @@ import type {
 import {
   MOCK_RECALLS,
   MOCK_DASHBOARD_STATS,
-  MOCK_STATE_COUNTS,
   MOCK_CATEGORY_BREAKDOWN,
-  MOCK_SEVERITY_DISTRIBUTION,
-  MOCK_TIMELINE_DATA,
   paginateMockRecalls,
 } from "@/lib/mock-data";
+import { US_STATES, ABBREVIATION_TO_STATE_NAME } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Generic fetch wrapper
@@ -159,7 +157,11 @@ export async function fetchStateCounts(params?: FilterParams): Promise<StateReca
   });
   const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
   for (const r of filtered) {
-    for (const st of r.distributionStates) {
+    // For nationwide recalls, count every state
+    const states = r.nationwide
+      ? US_STATES.map((s) => s.name)
+      : r.distributionStates.map((abbr) => ABBREVIATION_TO_STATE_NAME[abbr] ?? abbr);
+    for (const st of states) {
       if (!counts[st]) counts[st] = { count: 0, fdaCount: 0, usdaCount: 0 };
       counts[st].count++;
       if (r.source === "FDA") counts[st].fdaCount++;
@@ -268,6 +270,18 @@ export async function fetchTimeline(params?: FilterParams): Promise<TimelineData
     if (r.classification === "I") byDate[date].classI++;
     else if (r.classification === "II") byDate[date].classII++;
     else byDate[date].classIII++;
+  }
+
+  // Fill in empty days so the chart has a continuous x-axis
+  const days = params?.days || 30;
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    if (!byDate[dateStr]) {
+      byDate[dateStr] = { date: dateStr, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+    }
   }
 
   return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
