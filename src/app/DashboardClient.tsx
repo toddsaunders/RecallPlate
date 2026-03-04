@@ -324,7 +324,7 @@ export function DashboardClient() {
               )}
             >
               <BarChart3 className="h-3.5 w-3.5" />
-              Dashboard
+              Home
             </button>
             <button
               type="button"
