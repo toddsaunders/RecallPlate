@@ -8,20 +8,19 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { cn } from "@/lib/utils";
+import type { StateMapEntry } from "@/lib/mock-data";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface USMapProps {
-  /** Map of state abbreviation or name to recall count. */
-  data: Record<string, number>;
-  /** States to highlight (e.g., for a specific recall's distribution). */
+  /** Map of state name to recall counts. */
+  data: Record<string, StateMapEntry>;
+  /** States to highlight (e.g., selected filter states). */
   highlightedStates?: string[];
   /** "full" for dashboard, "mini" for detail page inset. */
   size?: "full" | "mini";
-  /** Click handler for a state. */
-  onStateClick?: (stateId: string, stateName: string) => void;
   className?: string;
 }
 
@@ -64,6 +63,8 @@ const HIGHLIGHT_COLOR = "#F28C28";
 interface TooltipData {
   name: string;
   count: number;
+  fdaCount: number;
+  usdaCount: number;
   x: number;
   y: number;
 }
@@ -76,13 +77,12 @@ export function USMap({
   data,
   highlightedStates,
   size = "full",
-  onStateClick,
   className,
 }: USMapProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
   const maxCount = useMemo(() => {
-    const values = Object.values(data);
+    const values = Object.values(data).map((e) => e.count);
     return values.length > 0 ? Math.max(...values) : 0;
   }, [data]);
 
@@ -94,10 +94,17 @@ export function USMap({
   const handleMouseEnter = useCallback(
     (geo: { properties: { name: string } }, event: React.MouseEvent) => {
       const name = geo.properties.name;
-      const count = data[name] ?? data[name.toUpperCase()] ?? 0;
-      setTooltip({ name, count, x: event.clientX, y: event.clientY });
+      const entry = data[name] ?? data[name.toUpperCase()] ?? { count: 0, fdaCount: 0, usdaCount: 0 };
+      setTooltip({ name, ...entry, x: event.clientX, y: event.clientY });
     },
     [data]
+  );
+
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      setTooltip((prev) => prev ? { ...prev, x: event.clientX, y: event.clientY } : null);
+    },
+    []
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -125,14 +132,14 @@ export function USMap({
             {({ geographies }) =>
               geographies.map((geo) => {
                 const stateName: string = geo.properties.name;
-                const count = data[stateName] ?? data[stateName.toUpperCase()] ?? 0;
+                const entry = data[stateName] ?? data[stateName.toUpperCase()] ?? { count: 0, fdaCount: 0, usdaCount: 0 };
                 const isHighlighted = highlightSet.has(stateName.toUpperCase());
 
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={isHighlighted ? HIGHLIGHT_COLOR : getColor(count, maxCount)}
+                    fill={isHighlighted ? HIGHLIGHT_COLOR : getColor(entry.count, maxCount)}
                     stroke="#FFFFFF"
                     strokeWidth={0.5}
                     style={{
@@ -140,16 +147,18 @@ export function USMap({
                       hover: {
                         fill: isHighlighted ? "#E67E22" : "#90CAF9",
                         outline: "none",
-                        cursor: onStateClick ? "pointer" : "default",
+                        cursor: "default",
                       },
                       pressed: { outline: "none" },
                     }}
                     onMouseEnter={(event) =>
                       handleMouseEnter(geo, event as unknown as React.MouseEvent)
                     }
+                    onMouseMove={(event) =>
+                      handleMouseMove(event as unknown as React.MouseEvent)
+                    }
                     onMouseLeave={handleMouseLeave}
-                    onClick={() => onStateClick?.(geo.id as string, stateName)}
-                    aria-label={`${stateName}: ${count} recall${count !== 1 ? "s" : ""}`}
+                    aria-label={`${stateName}: ${entry.count} recall${entry.count !== 1 ? "s" : ""}`}
                   />
                 );
               })
@@ -161,16 +170,27 @@ export function USMap({
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="pointer-events-none fixed z-50 rounded-md bg-canvas-dark px-3 py-2 text-sm text-text-on-dark shadow-lg"
+          className="pointer-events-none fixed z-50 min-w-[160px] rounded-lg bg-canvas-dark px-3.5 py-2.5 shadow-lg"
           style={{
-            left: tooltip.x + 12,
-            top: tooltip.y - 28,
+            left: tooltip.x + 14,
+            top: tooltip.y - 40,
           }}
         >
-          <span className="font-medium">{tooltip.name}</span>
-          <span className="ml-2 text-text-on-dark/70">
-            {tooltip.count} recall{tooltip.count !== 1 ? "s" : ""}
-          </span>
+          <p className="mb-1.5 text-sm font-semibold text-text-on-dark">{tooltip.name}</p>
+          <div className="flex flex-col gap-0.5 text-xs">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-text-on-dark/60">Active Recalls</span>
+              <span className="font-medium tabular-nums text-text-on-dark">{tooltip.count}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-text-on-dark/60">FDA</span>
+              <span className="font-medium tabular-nums text-text-on-dark">{tooltip.fdaCount}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-text-on-dark/60">USDA</span>
+              <span className="font-medium tabular-nums text-text-on-dark">{tooltip.usdaCount}</span>
+            </div>
+          </div>
         </div>
       )}
 

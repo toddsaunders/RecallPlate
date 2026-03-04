@@ -151,6 +151,8 @@ export interface DashboardStats {
 export interface StateRecallCount {
   state: string;
   count: number;
+  fdaCount: number;
+  usdaCount: number;
 }
 
 /** Category breakdown for the bar chart. */

@@ -10,23 +10,49 @@ export interface FilterOption {
   icon?: React.ReactNode;
 }
 
-interface FilterDropdownProps {
+// ---------------------------------------------------------------------------
+// Single-select props
+// ---------------------------------------------------------------------------
+
+interface SingleSelectProps {
+  multiple?: false;
   value: string | null;
   onChange: (value: string | null) => void;
+  values?: never;
+  onValuesChange?: never;
+}
+
+// ---------------------------------------------------------------------------
+// Multi-select props
+// ---------------------------------------------------------------------------
+
+interface MultiSelectProps {
+  multiple: true;
+  values: string[];
+  onValuesChange: (values: string[]) => void;
+  value?: never;
+  onChange?: never;
+}
+
+// ---------------------------------------------------------------------------
+// Common props
+// ---------------------------------------------------------------------------
+
+type FilterDropdownProps = (SingleSelectProps | MultiSelectProps) & {
   options: FilterOption[];
   placeholder: string;
   ariaLabel: string;
   className?: string;
-}
+};
 
-export function FilterDropdown({
-  value,
-  onChange,
-  options,
-  placeholder,
-  ariaLabel,
-  className,
-}: FilterDropdownProps) {
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function FilterDropdown(props: FilterDropdownProps) {
+  const { options, placeholder, ariaLabel, className } = props;
+  const isMulti = props.multiple === true;
+
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -52,22 +78,67 @@ export function FilterDropdown({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
-  const selectedOption = options.find((o) => o.value === value);
-  const selectedLabel = selectedOption?.label;
-  const selectedIcon = selectedOption?.icon;
-
-  const handleSelect = useCallback(
+  // --- Helpers for both modes ---
+  const isSelected = useCallback(
     (optionValue: string) => {
-      onChange(optionValue === value ? null : optionValue);
-      setOpen(false);
+      if (isMulti) return (props as MultiSelectProps).values.includes(optionValue);
+      return (props as SingleSelectProps).value === optionValue;
     },
-    [onChange, value]
+    [isMulti, isMulti ? (props as MultiSelectProps).values : (props as SingleSelectProps).value]
   );
 
+  const hasValue = isMulti
+    ? (props as MultiSelectProps).values.length > 0
+    : (props as SingleSelectProps).value !== null;
+
+  // Trigger label
+  let triggerLabel = placeholder;
+  let triggerIcon: React.ReactNode = null;
+  if (isMulti) {
+    const vals = (props as MultiSelectProps).values;
+    if (vals.length === 1) {
+      const opt = options.find((o) => o.value === vals[0]);
+      triggerLabel = opt?.label ?? placeholder;
+      triggerIcon = opt?.icon ?? null;
+    } else if (vals.length > 1) {
+      triggerLabel = `${vals.length} selected`;
+    }
+  } else {
+    const opt = options.find((o) => o.value === (props as SingleSelectProps).value);
+    if (opt) {
+      triggerLabel = opt.label;
+      triggerIcon = opt.icon ?? null;
+    }
+  }
+
+  // Select handler
+  const handleSelect = useCallback(
+    (optionValue: string) => {
+      if (isMulti) {
+        const mp = props as MultiSelectProps;
+        if (mp.values.includes(optionValue)) {
+          mp.onValuesChange(mp.values.filter((v) => v !== optionValue));
+        } else {
+          mp.onValuesChange([...mp.values, optionValue]);
+        }
+      } else {
+        const sp = props as SingleSelectProps;
+        sp.onChange(optionValue === sp.value ? null : optionValue);
+        setOpen(false);
+      }
+    },
+    [isMulti, props]
+  );
+
+  // Clear handler
   const handleClear = useCallback(() => {
-    onChange(null);
+    if (isMulti) {
+      (props as MultiSelectProps).onValuesChange([]);
+    } else {
+      (props as SingleSelectProps).onChange(null);
+    }
     setOpen(false);
-  }, [onChange]);
+  }, [isMulti, props]);
 
   return (
     <div ref={ref} className={cn("relative", className)}>
@@ -82,20 +153,18 @@ export function FilterDropdown({
           open
             ? "border-gray-300 shadow-sm"
             : "border-border hover:border-gray-300 hover:shadow-sm",
-          value ? "text-text-primary" : "text-text-secondary"
+          hasValue ? "text-text-primary" : "text-text-secondary"
         )}
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        {selectedIcon && (
+        {triggerIcon && (
           <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-text-secondary">
-            {selectedIcon}
+            {triggerIcon}
           </span>
         )}
-        <span className="max-w-[140px] truncate">
-          {selectedLabel ?? placeholder}
-        </span>
+        <span className="max-w-[140px] truncate">{triggerLabel}</span>
         <ChevronsUpDown
           className={cn(
             "h-3 w-3 shrink-0 text-text-secondary transition-transform duration-150",
@@ -108,11 +177,10 @@ export function FilterDropdown({
       {/* Dropdown panel */}
       {open && (
         <div
-          className={cn(
-            "absolute left-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/[0.06]"
-          )}
+          className="absolute left-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/[0.06]"
           role="listbox"
           aria-label={ariaLabel}
+          aria-multiselectable={isMulti}
         >
           {/* All / clear option */}
           <button
@@ -120,15 +188,15 @@ export function FilterDropdown({
             onClick={handleClear}
             className={cn(
               "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors duration-75",
-              !value
+              !hasValue
                 ? "bg-gray-50 font-medium text-text-primary"
                 : "text-text-secondary hover:bg-gray-50 hover:text-text-primary"
             )}
             role="option"
-            aria-selected={!value}
+            aria-selected={!hasValue}
           >
             <span className="flex h-4 w-4 items-center justify-center">
-              {!value && <Check className="h-3.5 w-3.5" />}
+              {!hasValue && <Check className="h-3.5 w-3.5" />}
             </span>
             {placeholder}
           </button>
@@ -139,7 +207,7 @@ export function FilterDropdown({
           {/* Options */}
           <div className="max-h-[280px] overflow-y-auto overscroll-contain">
             {options.map((option) => {
-              const isSelected = option.value === value;
+              const selected = isSelected(option.value);
               return (
                 <button
                   key={option.value}
@@ -147,12 +215,12 @@ export function FilterDropdown({
                   onClick={() => handleSelect(option.value)}
                   className={cn(
                     "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors duration-75",
-                    isSelected
+                    selected
                       ? "bg-gray-50 font-medium text-text-primary"
                       : "text-text-primary hover:bg-gray-50"
                   )}
                   role="option"
-                  aria-selected={isSelected}
+                  aria-selected={selected}
                 >
                   {option.icon ? (
                     <span className="flex h-4 w-4 shrink-0 items-center justify-center text-text-secondary">
@@ -160,11 +228,11 @@ export function FilterDropdown({
                     </span>
                   ) : (
                     <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                      {isSelected && <Check className="h-3.5 w-3.5" />}
+                      {selected && <Check className="h-3.5 w-3.5" />}
                     </span>
                   )}
                   <span className="flex-1 truncate">{option.label}</span>
-                  {option.icon && isSelected && (
+                  {option.icon && selected && (
                     <Check className="h-3.5 w-3.5 shrink-0 text-text-secondary" />
                   )}
                 </button>

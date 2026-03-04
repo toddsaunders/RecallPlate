@@ -88,13 +88,13 @@ export function RecallDetailClient({ recall }: RecallDetailClientProps) {
   }, [recall.id, recall.productCategory]);
 
   // Build distribution map data
-  const distributionMapData: Record<string, number> = {};
+  const distributionMapData: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
   if (recall.nationwide) {
     // Highlight all states lightly
   } else {
     for (const abbr of recall.distributionStates) {
       const name = ABBREVIATION_TO_STATE_NAME[abbr];
-      if (name) distributionMapData[name] = 1;
+      if (name) distributionMapData[name] = { count: 1, fdaCount: recall.source === "FDA" ? 1 : 0, usdaCount: recall.source === "USDA" ? 1 : 0 };
     }
   }
 

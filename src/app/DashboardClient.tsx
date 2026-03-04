@@ -76,7 +76,7 @@ import {
 } from "@/lib/api";
 import { stateCountsToMap } from "@/lib/mock-data";
 import { formatDate, truncate } from "@/lib/utils";
-import { US_STATES, PRODUCT_CATEGORIES, SEVERITY_LABELS } from "@/lib/constants";
+import { US_STATES, PRODUCT_CATEGORIES, SEVERITY_LABELS, ABBREVIATION_TO_STATE_NAME } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -204,7 +204,7 @@ export function DashboardClient() {
   // View & filters
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
   const [timeRange, setTimeRange] = useState<TimeRange>(TIME_RANGES[0]);
-  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
 
@@ -231,9 +231,10 @@ export function DashboardClient() {
     setLoading(true);
     setRecallPage(1);
 
+    const stateParam = selectedStates.length > 0 ? selectedStates.join(",") : undefined;
     const params = {
       days: timeRange.days || undefined,
-      state: selectedState ?? undefined,
+      state: stateParam,
       category: selectedCategory ?? undefined,
       severity: selectedSeverity ?? undefined,
     };
@@ -247,7 +248,7 @@ export function DashboardClient() {
           fetchSeverityDistribution(params),
           fetchTimeline(params),
           fetchRecalls({
-            state: selectedState ?? undefined,
+            state: stateParam,
             category: selectedCategory ?? undefined,
             severity: (selectedSeverity as RecallClassification) ?? undefined,
             page: 1,
@@ -269,7 +270,7 @@ export function DashboardClient() {
     } finally {
       setLoading(false);
     }
-  }, [timeRange, selectedState, selectedCategory, selectedSeverity]);
+  }, [timeRange, selectedStates, selectedCategory, selectedSeverity]);
 
   useEffect(() => {
     loadDashboardData();
@@ -279,9 +280,10 @@ export function DashboardClient() {
   const handleLoadMore = useCallback(async () => {
     setLoadingMore(true);
     const nextPage = recallPage + 1;
+    const stateParam = selectedStates.length > 0 ? selectedStates.join(",") : undefined;
     try {
       const data = await fetchRecalls({
-        state: selectedState ?? undefined,
+        state: stateParam,
         category: selectedCategory ?? undefined,
         severity: (selectedSeverity as RecallClassification) ?? undefined,
         page: nextPage,
@@ -296,11 +298,11 @@ export function DashboardClient() {
     } finally {
       setLoadingMore(false);
     }
-  }, [recallPage, selectedState, selectedCategory, selectedSeverity]);
+  }, [recallPage, selectedStates, selectedCategory, selectedSeverity]);
 
   // Derived
   const mapData = useMemo(() => stateCountsToMap(stateCounts), [stateCounts]);
-  const hasActiveFilters = selectedState || selectedCategory || selectedSeverity;
+  const hasActiveFilters = selectedStates.length > 0 || selectedCategory || selectedSeverity;
   const hasMore = recalls.length < totalRecalls;
 
   const sortedRecalls = useMemo(() => {
@@ -317,13 +319,6 @@ export function DashboardClient() {
   }, [recalls, sortState]);
 
   // Handlers
-  const handleStateClick = useCallback(
-    (_stateId: string, stateName: string) => {
-      setSelectedState(selectedState === stateName ? null : stateName);
-    },
-    [selectedState]
-  );
-
   const handleCategoryClick = useCallback(
     (category: string) => {
       setSelectedCategory(selectedCategory === category ? null : category);
@@ -339,7 +334,7 @@ export function DashboardClient() {
   );
 
   const clearFilters = useCallback(() => {
-    setSelectedState(null);
+    setSelectedStates([]);
     setSelectedCategory(null);
     setSelectedSeverity(null);
   }, []);
@@ -436,8 +431,9 @@ export function DashboardClient() {
 
           {/* Filter dropdowns */}
           <FilterDropdown
-            value={selectedState}
-            onChange={setSelectedState}
+            multiple
+            values={selectedStates}
+            onValuesChange={setSelectedStates}
             options={STATE_OPTIONS}
             placeholder="All States"
             ariaLabel="Filter by state"
@@ -460,15 +456,15 @@ export function DashboardClient() {
           {/* Active filters */}
           {hasActiveFilters && (
             <div className="flex items-center gap-2" aria-live="polite" role="status">
-              {selectedState && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-folder-orange/10 px-2.5 py-1 text-xs font-medium text-folder-orange">
+              {selectedStates.map((st) => (
+                <span key={st} className="inline-flex items-center gap-1 rounded-full bg-folder-orange/10 px-2.5 py-1 text-xs font-medium text-folder-orange">
                   <MapPin className="h-3 w-3" />
-                  {selectedState}
-                  <button type="button" onClick={() => setSelectedState(null)} className="ml-0.5 hover:text-folder-orange/70" aria-label={`Remove ${selectedState} filter`}>
+                  {ABBREVIATION_TO_STATE_NAME[st] ?? st}
+                  <button type="button" onClick={() => setSelectedStates(selectedStates.filter((s) => s !== st))} className="ml-0.5 hover:text-folder-orange/70" aria-label={`Remove ${ABBREVIATION_TO_STATE_NAME[st] ?? st} filter`}>
                     <X className="h-3 w-3" />
                   </button>
                 </span>
-              )}
+              ))}
               {selectedCategory && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-folder-teal/10 px-2.5 py-1 text-xs font-medium text-folder-teal">
                   {selectedCategory}
@@ -514,19 +510,12 @@ export function DashboardClient() {
           {/* Map + Timeline */}
           <div className="mb-6 grid grid-cols-1 gap-[var(--spacing-card-gap)] lg:grid-cols-2">
             <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Recalls by State</h2>
-                {selectedState && (
-                  <button type="button" onClick={() => setSelectedState(null)} className="flex items-center gap-1 text-xs text-folder-orange hover:underline">
-                    <X className="h-3 w-3" /> Clear
-                  </button>
-                )}
-              </div>
+              <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-text-secondary">Recalls by State</h2>
               {loading ? (
                 <div className="h-64 animate-pulse rounded bg-gray-100" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="256px">
-                  <USMap data={mapData} highlightedStates={selectedState ? [selectedState] : undefined} onStateClick={handleStateClick} size="full" />
+                  <USMap data={mapData} highlightedStates={selectedStates.length > 0 ? selectedStates.map((abbr) => ABBREVIATION_TO_STATE_NAME[abbr] ?? abbr) : undefined} size="full" />
                 </ChartErrorBoundary>
               )}
             </section>

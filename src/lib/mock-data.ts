@@ -431,56 +431,56 @@ export const MOCK_DASHBOARD_STATS: DashboardStats = {
 // ---------------------------------------------------------------------------
 
 export const MOCK_STATE_COUNTS: StateRecallCount[] = [
-  { state: "California", count: 28 },
-  { state: "Texas", count: 22 },
-  { state: "New York", count: 19 },
-  { state: "Florida", count: 17 },
-  { state: "Illinois", count: 14 },
-  { state: "Pennsylvania", count: 12 },
-  { state: "Ohio", count: 11 },
-  { state: "Georgia", count: 10 },
-  { state: "Michigan", count: 9 },
-  { state: "North Carolina", count: 8 },
-  { state: "New Jersey", count: 8 },
-  { state: "Washington", count: 7 },
-  { state: "Oregon", count: 7 },
-  { state: "Virginia", count: 6 },
-  { state: "Massachusetts", count: 6 },
-  { state: "Arizona", count: 6 },
-  { state: "Colorado", count: 5 },
-  { state: "Indiana", count: 5 },
-  { state: "Tennessee", count: 5 },
-  { state: "Missouri", count: 4 },
-  { state: "Minnesota", count: 4 },
-  { state: "Wisconsin", count: 4 },
-  { state: "Maryland", count: 3 },
-  { state: "Alabama", count: 3 },
-  { state: "South Carolina", count: 3 },
-  { state: "Louisiana", count: 3 },
-  { state: "Kentucky", count: 3 },
-  { state: "Connecticut", count: 2 },
-  { state: "Iowa", count: 2 },
-  { state: "Oklahoma", count: 2 },
-  { state: "Nevada", count: 2 },
-  { state: "Kansas", count: 2 },
-  { state: "Utah", count: 2 },
-  { state: "Arkansas", count: 1 },
-  { state: "Mississippi", count: 1 },
-  { state: "Nebraska", count: 1 },
-  { state: "New Mexico", count: 1 },
-  { state: "Idaho", count: 1 },
-  { state: "Montana", count: 1 },
-  { state: "Vermont", count: 1 },
-  { state: "New Hampshire", count: 1 },
-  { state: "Maine", count: 1 },
-  { state: "Hawaii", count: 1 },
-  { state: "West Virginia", count: 1 },
-  { state: "Rhode Island", count: 1 },
-  { state: "Delaware", count: 0 },
-  { state: "South Dakota", count: 0 },
-  { state: "North Dakota", count: 0 },
-  { state: "Wyoming", count: 0 },
-  { state: "Alaska", count: 0 },
+  { state: "California", count: 28, fdaCount: 19, usdaCount: 9 },
+  { state: "Texas", count: 22, fdaCount: 14, usdaCount: 8 },
+  { state: "New York", count: 19, fdaCount: 13, usdaCount: 6 },
+  { state: "Florida", count: 17, fdaCount: 12, usdaCount: 5 },
+  { state: "Illinois", count: 14, fdaCount: 9, usdaCount: 5 },
+  { state: "Pennsylvania", count: 12, fdaCount: 8, usdaCount: 4 },
+  { state: "Ohio", count: 11, fdaCount: 7, usdaCount: 4 },
+  { state: "Georgia", count: 10, fdaCount: 7, usdaCount: 3 },
+  { state: "Michigan", count: 9, fdaCount: 6, usdaCount: 3 },
+  { state: "North Carolina", count: 8, fdaCount: 5, usdaCount: 3 },
+  { state: "New Jersey", count: 8, fdaCount: 6, usdaCount: 2 },
+  { state: "Washington", count: 7, fdaCount: 5, usdaCount: 2 },
+  { state: "Oregon", count: 7, fdaCount: 5, usdaCount: 2 },
+  { state: "Virginia", count: 6, fdaCount: 4, usdaCount: 2 },
+  { state: "Massachusetts", count: 6, fdaCount: 4, usdaCount: 2 },
+  { state: "Arizona", count: 6, fdaCount: 4, usdaCount: 2 },
+  { state: "Colorado", count: 5, fdaCount: 3, usdaCount: 2 },
+  { state: "Indiana", count: 5, fdaCount: 3, usdaCount: 2 },
+  { state: "Tennessee", count: 5, fdaCount: 3, usdaCount: 2 },
+  { state: "Missouri", count: 4, fdaCount: 3, usdaCount: 1 },
+  { state: "Minnesota", count: 4, fdaCount: 3, usdaCount: 1 },
+  { state: "Wisconsin", count: 4, fdaCount: 2, usdaCount: 2 },
+  { state: "Maryland", count: 3, fdaCount: 2, usdaCount: 1 },
+  { state: "Alabama", count: 3, fdaCount: 2, usdaCount: 1 },
+  { state: "South Carolina", count: 3, fdaCount: 2, usdaCount: 1 },
+  { state: "Louisiana", count: 3, fdaCount: 2, usdaCount: 1 },
+  { state: "Kentucky", count: 3, fdaCount: 2, usdaCount: 1 },
+  { state: "Connecticut", count: 2, fdaCount: 1, usdaCount: 1 },
+  { state: "Iowa", count: 2, fdaCount: 1, usdaCount: 1 },
+  { state: "Oklahoma", count: 2, fdaCount: 1, usdaCount: 1 },
+  { state: "Nevada", count: 2, fdaCount: 2, usdaCount: 0 },
+  { state: "Kansas", count: 2, fdaCount: 1, usdaCount: 1 },
+  { state: "Utah", count: 2, fdaCount: 1, usdaCount: 1 },
+  { state: "Arkansas", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Mississippi", count: 1, fdaCount: 0, usdaCount: 1 },
+  { state: "Nebraska", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "New Mexico", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Idaho", count: 1, fdaCount: 0, usdaCount: 1 },
+  { state: "Montana", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Vermont", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "New Hampshire", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Maine", count: 1, fdaCount: 0, usdaCount: 1 },
+  { state: "Hawaii", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "West Virginia", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Rhode Island", count: 1, fdaCount: 1, usdaCount: 0 },
+  { state: "Delaware", count: 0, fdaCount: 0, usdaCount: 0 },
+  { state: "South Dakota", count: 0, fdaCount: 0, usdaCount: 0 },
+  { state: "North Dakota", count: 0, fdaCount: 0, usdaCount: 0 },
+  { state: "Wyoming", count: 0, fdaCount: 0, usdaCount: 0 },
+  { state: "Alaska", count: 0, fdaCount: 0, usdaCount: 0 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -565,10 +565,16 @@ export const MOCK_TIMELINE_DATA: TimelineDataPoint[] = generateTimelineData();
 // Helper: Convert state counts array to map
 // ---------------------------------------------------------------------------
 
-export function stateCountsToMap(counts: StateRecallCount[]): Record<string, number> {
-  const map: Record<string, number> = {};
-  for (const { state, count } of counts) {
-    map[state] = count;
+export interface StateMapEntry {
+  count: number;
+  fdaCount: number;
+  usdaCount: number;
+}
+
+export function stateCountsToMap(counts: StateRecallCount[]): Record<string, StateMapEntry> {
+  const map: Record<string, StateMapEntry> = {};
+  for (const { state, count, fdaCount, usdaCount } of counts) {
+    map[state] = { count, fdaCount, usdaCount };
   }
   return map;
 }
