@@ -8,7 +8,6 @@ import {
   ChevronDown,
   BarChart3,
   Table2,
-  ChevronsUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -26,6 +25,7 @@ import dynamic from "next/dynamic";
 
 import { SummaryCards, type SummaryCardData } from "@/components/cards/SummaryCards";
 import { DataTable, type ColumnDef, type SortState } from "@/components/ui/DataTable";
+import { FilterDropdown, type FilterOption } from "@/components/ui/FilterDropdown";
 import { SeverityBadge } from "@/components/ui/Badge";
 import { AlertCTA } from "@/components/forms/AlertCTA";
 import { ChartErrorBoundary } from "@/components/ui/ChartErrorBoundary";
@@ -58,7 +58,7 @@ import {
 } from "@/lib/api";
 import { stateCountsToMap } from "@/lib/mock-data";
 import { formatDate, truncate } from "@/lib/utils";
-import { US_STATES } from "@/lib/constants";
+import { US_STATES, PRODUCT_CATEGORIES, SEVERITY_LABELS } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -73,6 +73,20 @@ const TIME_RANGES = [
 
 type TimeRange = (typeof TIME_RANGES)[number];
 type ViewMode = "dashboard" | "table";
+
+const STATE_OPTIONS: FilterOption[] = US_STATES.map((s) => ({
+  value: s.abbreviation,
+  label: s.name,
+}));
+
+const CATEGORY_OPTIONS: FilterOption[] = PRODUCT_CATEGORIES.map((cat) => ({
+  value: cat,
+  label: cat,
+}));
+
+const SEVERITY_OPTIONS: FilterOption[] = Object.entries(SEVERITY_LABELS).map(
+  ([key, label]) => ({ value: key, label: `Class ${key} — ${label}` })
+);
 
 // ---------------------------------------------------------------------------
 // Table columns — clean, minimal
@@ -168,6 +182,8 @@ export function DashboardClient() {
     const params = {
       days: timeRange.days || undefined,
       state: selectedState ?? undefined,
+      category: selectedCategory ?? undefined,
+      severity: selectedSeverity ?? undefined,
     };
 
     try {
@@ -366,28 +382,28 @@ export function DashboardClient() {
             ))}
           </div>
 
-          {/* State picker */}
-          <div className="relative">
-            <select
-              value={selectedState ?? ""}
-              onChange={(e) => setSelectedState(e.target.value || null)}
-              className={cn(
-                "appearance-none rounded-lg border border-border bg-white py-1.5 pl-3 pr-8 text-xs font-medium",
-                "transition-colors duration-[var(--duration-micro)]",
-                "focus:outline-none focus:ring-2 focus:ring-folder-blue/30",
-                selectedState ? "text-text-primary" : "text-text-secondary"
-              )}
-              aria-label="Filter by state"
-            >
-              <option value="">All States</option>
-              {US_STATES.map((s) => (
-                <option key={s.abbreviation} value={s.abbreviation}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            <ChevronsUpDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
-          </div>
+          {/* Filter dropdowns */}
+          <FilterDropdown
+            value={selectedState}
+            onChange={setSelectedState}
+            options={STATE_OPTIONS}
+            placeholder="All States"
+            ariaLabel="Filter by state"
+          />
+          <FilterDropdown
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            options={CATEGORY_OPTIONS}
+            placeholder="All Categories"
+            ariaLabel="Filter by category"
+          />
+          <FilterDropdown
+            value={selectedSeverity}
+            onChange={setSelectedSeverity}
+            options={SEVERITY_OPTIONS}
+            placeholder="All Severities"
+            ariaLabel="Filter by severity"
+          />
 
           {/* Active filters */}
           {hasActiveFilters && (
