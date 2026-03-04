@@ -88,6 +88,11 @@ function filterMockRecalls(
 ): RecallEventSerialized[] {
   let filtered = [...recalls];
 
+  if (params?.days) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - params.days);
+    filtered = filtered.filter((r) => new Date(r.reportDate) >= cutoff);
+  }
   if (params?.state) {
     const states = params.state.split(",").map((s) => s.toUpperCase());
     filtered = filtered.filter(
@@ -147,28 +152,24 @@ export async function fetchStateCounts(params?: FilterParams): Promise<StateReca
   const data = await tryApi<StateRecallCount[]>(url);
   if (data) return data;
 
-  // Mock fallback — if we have category/severity filters, recompute from recalls
-  if (params?.category || params?.severity) {
-    const filtered = filterMockRecalls(MOCK_RECALLS, {
-      ...params,
-      state: undefined, // don't filter by state for the state counts
-    });
-    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
-    for (const r of filtered) {
-      for (const st of r.distributionStates) {
-        if (!counts[st]) counts[st] = { count: 0, fdaCount: 0, usdaCount: 0 };
-        counts[st].count++;
-        if (r.source === "FDA") counts[st].fdaCount++;
-        else counts[st].usdaCount++;
-      }
+  // Mock fallback — always recompute from filtered recalls
+  const filtered = filterMockRecalls(MOCK_RECALLS, {
+    ...params,
+    state: undefined, // don't filter by state for the state counts
+  });
+  const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
+  for (const r of filtered) {
+    for (const st of r.distributionStates) {
+      if (!counts[st]) counts[st] = { count: 0, fdaCount: 0, usdaCount: 0 };
+      counts[st].count++;
+      if (r.source === "FDA") counts[st].fdaCount++;
+      else counts[st].usdaCount++;
     }
-    return Object.entries(counts).map(([state, c]) => ({
-      state,
-      ...c,
-    }));
   }
-
-  return MOCK_STATE_COUNTS;
+  return Object.entries(counts).map(([state, c]) => ({
+    state,
+    ...c,
+  }));
 }
 
 export async function fetchCategoryBreakdown(params?: FilterParams): Promise<CategoryBreakdown[]> {
@@ -179,33 +180,28 @@ export async function fetchCategoryBreakdown(params?: FilterParams): Promise<Cat
   const data = await tryApi<CategoryBreakdown[]>(url);
   if (data) return data;
 
-  // Mock fallback — recompute from filtered recalls
-  if (params?.state || params?.severity) {
-    const filtered = filterMockRecalls(MOCK_RECALLS, {
-      ...params,
-      category: undefined, // don't filter by category for category breakdown
-    });
-    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
-    for (const r of filtered) {
-      if (!counts[r.productCategory]) counts[r.productCategory] = { count: 0, fdaCount: 0, usdaCount: 0 };
-      counts[r.productCategory].count++;
-      if (r.source === "FDA") counts[r.productCategory].fdaCount++;
-      else counts[r.productCategory].usdaCount++;
-    }
-    // Get color from static mock data
-    const colorMap: Record<string, string> = {};
-    for (const d of MOCK_CATEGORY_BREAKDOWN) colorMap[d.category] = d.color;
-
-    return Object.entries(counts)
-      .map(([category, c]) => ({
-        category,
-        ...c,
-        color: colorMap[category] || "#6B7280",
-      }))
-      .sort((a, b) => b.count - a.count);
+  // Mock fallback — always recompute from filtered recalls
+  const filtered = filterMockRecalls(MOCK_RECALLS, {
+    ...params,
+    category: undefined, // don't filter by category for category breakdown
+  });
+  const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
+  for (const r of filtered) {
+    if (!counts[r.productCategory]) counts[r.productCategory] = { count: 0, fdaCount: 0, usdaCount: 0 };
+    counts[r.productCategory].count++;
+    if (r.source === "FDA") counts[r.productCategory].fdaCount++;
+    else counts[r.productCategory].usdaCount++;
   }
+  const colorMap: Record<string, string> = {};
+  for (const d of MOCK_CATEGORY_BREAKDOWN) colorMap[d.category] = d.color;
 
-  return MOCK_CATEGORY_BREAKDOWN;
+  return Object.entries(counts)
+    .map(([category, c]) => ({
+      category,
+      ...c,
+      color: colorMap[category] || "#6B7280",
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function fetchSeverityDistribution(params?: FilterParams): Promise<SeverityDistribution[]> {
@@ -216,41 +212,37 @@ export async function fetchSeverityDistribution(params?: FilterParams): Promise<
   const data = await tryApi<SeverityDistribution[]>(url);
   if (data) return data;
 
-  // Mock fallback — recompute from filtered recalls
-  if (params?.state || params?.category) {
-    const filtered = filterMockRecalls(MOCK_RECALLS, {
-      ...params,
-      severity: undefined, // don't filter by severity for severity distribution
-    });
-    const total = filtered.length || 1;
-    const labels: Record<string, string> = {
-      I: "Serious Health Risk",
-      II: "Remote Health Risk",
-      III: "Not Likely Harmful",
-    };
-    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {
-      I: { count: 0, fdaCount: 0, usdaCount: 0 },
-      II: { count: 0, fdaCount: 0, usdaCount: 0 },
-      III: { count: 0, fdaCount: 0, usdaCount: 0 },
-    };
-    for (const r of filtered) {
-      if (counts[r.classification]) {
-        counts[r.classification].count++;
-        if (r.source === "FDA") counts[r.classification].fdaCount++;
-        else counts[r.classification].usdaCount++;
-      }
+  // Mock fallback — always recompute from filtered recalls
+  const filtered = filterMockRecalls(MOCK_RECALLS, {
+    ...params,
+    severity: undefined, // don't filter by severity for severity distribution
+  });
+  const total = filtered.length || 1;
+  const labels: Record<string, string> = {
+    I: "Serious Health Risk",
+    II: "Remote Health Risk",
+    III: "Not Likely Harmful",
+  };
+  const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {
+    I: { count: 0, fdaCount: 0, usdaCount: 0 },
+    II: { count: 0, fdaCount: 0, usdaCount: 0 },
+    III: { count: 0, fdaCount: 0, usdaCount: 0 },
+  };
+  for (const r of filtered) {
+    if (counts[r.classification]) {
+      counts[r.classification].count++;
+      if (r.source === "FDA") counts[r.classification].fdaCount++;
+      else counts[r.classification].usdaCount++;
     }
-    return (["I", "II", "III"] as const).map((cls) => ({
-      classification: cls,
-      label: labels[cls],
-      count: counts[cls].count,
-      fdaCount: counts[cls].fdaCount,
-      usdaCount: counts[cls].usdaCount,
-      percentage: (counts[cls].count / total) * 100,
-    }));
   }
-
-  return MOCK_SEVERITY_DISTRIBUTION;
+  return (["I", "II", "III"] as const).map((cls) => ({
+    classification: cls,
+    label: labels[cls],
+    count: counts[cls].count,
+    fdaCount: counts[cls].fdaCount,
+    usdaCount: counts[cls].usdaCount,
+    percentage: (counts[cls].count / total) * 100,
+  }));
 }
 
 export async function fetchTimeline(params?: FilterParams): Promise<TimelineDataPoint[]> {
@@ -261,35 +253,24 @@ export async function fetchTimeline(params?: FilterParams): Promise<TimelineData
   const data = await tryApi<TimelineDataPoint[]>(url);
   if (data) return data;
 
-  // Mock fallback — recompute from filtered recalls
-  if (params?.state || params?.category || params?.severity) {
-    const filtered = filterMockRecalls(MOCK_RECALLS, params);
-    const byDate: Record<string, TimelineDataPoint> = {};
+  // Mock fallback — always recompute from filtered recalls
+  const filtered = filterMockRecalls(MOCK_RECALLS, params);
+  const byDate: Record<string, TimelineDataPoint> = {};
 
-    for (const r of filtered) {
-      const date = r.reportDate.split("T")[0];
-      if (!byDate[date]) {
-        byDate[date] = { date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
-      }
-      byDate[date].count++;
-      if (r.source === "FDA") byDate[date].fdaCount++;
-      else byDate[date].usdaCount++;
-      if (r.classification === "I") byDate[date].classI++;
-      else if (r.classification === "II") byDate[date].classII++;
-      else byDate[date].classIII++;
+  for (const r of filtered) {
+    const date = r.reportDate.split("T")[0];
+    if (!byDate[date]) {
+      byDate[date] = { date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
     }
-
-    // Fill in dates from mock timeline that have no filtered data
-    for (const tp of MOCK_TIMELINE_DATA) {
-      if (!byDate[tp.date]) {
-        byDate[tp.date] = { date: tp.date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
-      }
-    }
-
-    return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+    byDate[date].count++;
+    if (r.source === "FDA") byDate[date].fdaCount++;
+    else byDate[date].usdaCount++;
+    if (r.classification === "I") byDate[date].classI++;
+    else if (r.classification === "II") byDate[date].classII++;
+    else byDate[date].classIII++;
   }
 
-  return MOCK_TIMELINE_DATA;
+  return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // ---------------------------------------------------------------------------
