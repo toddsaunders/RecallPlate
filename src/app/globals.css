@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+/*
+ * RecallPlate Design System — CSS Custom Properties
+ *
+ * Phase 1 (Folder Explorer): Dark background, saturated folder colors
+ * Phase 2 (Data Table): Light background, clean utility UI
+ *
+ * See docs/design-system.md for the full specification.
+ */
+
+@theme {
+  /* --- Folder Colors (Phase 1 Explorer) --- */
+  --color-folder-red: #E63B2E;
+  --color-folder-blue: #2B5CE6;
+  --color-folder-teal: #0E8A7D;
+  --color-folder-orange: #F28C28;
+  --color-folder-pink: #D94F8A;
+  --color-folder-purple: #7B3FA0;
+  --color-folder-yellow: #E6C820;
+  --color-folder-black: #1A1A1E;
+
+  /* --- Semantic Colors --- */
+  --color-text-primary: #1A1A1E;
+  --color-text-secondary: #6B7280;
+  --color-text-on-dark: #FFFFFF;
+  --color-border: #E5E5E5;
+  --color-surface: #FFFFFF;
+  --color-page-bg: #F5F5F3;
+  --color-canvas-dark: #111215;
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-danger: #DC2626;
+
+  /* --- Severity Classification Colors --- */
+  --color-severity-i: #C62828;
+  --color-severity-i-bg: #FFEBEE;
+  --color-severity-ii: #E65100;
+  --color-severity-ii-bg: #FFF3E0;
+  --color-severity-iii: #1565C0;
+  --color-severity-iii-bg: #E3F2FD;
+
+  /* --- Source Badge Colors --- */
+  --color-source-fda: #2B5CE6;
+  --color-source-fda-bg: #EFF6FF;
+  --color-source-usda: #0E8A7D;
+  --color-source-usda-bg: #F0FDFA;
+
+  /* --- Status Badge Colors --- */
+  --color-status-ongoing: #F59E0B;
+  --color-status-ongoing-bg: #FFFBEB;
+  --color-status-completed: #16A34A;
+  --color-status-completed-bg: #F0FDF4;
+  --color-status-terminated: #6B7280;
+  --color-status-terminated-bg: #F9FAFB;
+
+  /* --- Spacing Scale --- */
+  --spacing-page-x: 32px;
+  --spacing-page-x-mobile: 16px;
+  --spacing-folder-gap: 20px;
+  --spacing-card-gap: 16px;
+  --spacing-cell-x: 16px;
+
+  /* --- Font Families --- */
+  --font-display: "Instrument Serif", "Playfair Display", "EB Garamond", Georgia, serif;
+  --font-mono: "DM Mono", "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "DM Sans", "Satoshi", "General Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Font Sizes --- */
+  --text-folder-label: 20px;
+  --text-page-title: 32px;
+  --text-preview: 13px;
+  --text-table-header: 12px;
+  --text-table-body: 15px;
+  --text-secondary: 13px;
+  --text-kpi: 28px;
+
+  /* --- Border Radius --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* --- Shadows --- */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-folder: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-folder-hover: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  /* --- Transitions --- */
+  --ease-folder: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-folder: 500ms;
+  --duration-micro: 150ms;
+  --duration-slide: 200ms;
+}
+
+/* --- Base Styles --- */
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-page-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* --- Typography Scale Utilities --- */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.text-folder-label {
+  font-family: var(--font-display);
+  font-size: var(--text-folder-label);
+  line-height: 1.2;
+}
+
+.text-page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-page-title);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.text-preview {
+  font-family: var(--font-mono);
+  font-size: var(--text-preview);
+  line-height: 1.4;
+}
+
+.text-table-header {
+  font-family: var(--font-sans);
+  font-size: var(--text-table-header);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.text-table-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-table-body);
+  line-height: 1.5;
+}
+
+.text-secondary-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-secondary);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.text-kpi-value {
+  font-family: var(--font-sans);
+  font-size: var(--text-kpi);
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Severity Badge Styles --- */
+
+.badge-severity-i {
+  background-color: var(--color-severity-i-bg);
+  color: var(--color-severity-i);
+}
+
+.badge-severity-ii {
+  background-color: var(--color-severity-ii-bg);
+  color: var(--color-severity-ii);
+}
+
+.badge-severity-iii {
+  background-color: var(--color-severity-iii-bg);
+  color: var(--color-severity-iii);
+}
+
+/* --- Source Badge Styles --- */
+
+.badge-source-fda {
+  background-color: var(--color-source-fda-bg);
+  color: var(--color-source-fda);
+}
+
+.badge-source-usda {
+  background-color: var(--color-source-usda-bg);
+  color: var(--color-source-usda);
+}
+
+/* --- Focus Ring (Accessibility) --- */
+
+*:focus-visible {
+  outline: 2px solid var(--color-folder-blue);
+  outline-offset: 2px;
+}
+
+/* --- Touch Targets (Accessibility) --- */
+
+@media (pointer: coarse) {
+  button,
+  a,
+  [role="tab"],
+  [role="button"],
+  input[type="checkbox"],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* --- Responsive: Page title on mobile --- */
+
+@media (max-width: 640px) {
+  .text-page-title {
+    font-size: 24px;
+  }
+
+  .text-kpi-value {
+    font-size: 22px;
+  }
+}
+
+/* --- Prevent horizontal overflow --- */
+
+html {
+  overflow-x: hidden;
+}
+
+/* --- Reduced Motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

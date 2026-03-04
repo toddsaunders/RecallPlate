@@ -1,0 +1,107 @@
+// RecallPlate — Prisma Schema
+//
+// Three core models:
+//   1. RecallEvent  — Unified recall data from FDA and USDA
+//   2. AlertSubscriber — Email capture for recall notifications
+//   3. SyncLog — ETL pipeline run metadata
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma/client"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// RecallEvent
+// ---------------------------------------------------------------------------
+
+enum RecallSource {
+  FDA
+  USDA
+}
+
+enum RecallClassification {
+  I
+  II
+  III
+}
+
+model RecallEvent {
+  id                   String               @id @default(cuid())
+  source               RecallSource
+  recallNumber         String               @map("recall_number")
+  classification       RecallClassification
+  status               String
+  productDescription   String               @map("product_description") @db.Text
+  productCategory      String               @map("product_category")
+  reason               String               @db.Text
+  reasonCategory       String               @map("reason_category")
+  recallingFirm        String               @map("recalling_firm")
+  distributionStates   String[]             @map("distribution_states")
+  nationwide           Boolean              @default(false)
+  reportDate           DateTime             @map("report_date")
+  recallInitiationDate DateTime?            @map("recall_initiation_date")
+  city                 String?
+  state                String?
+  quantity             String?
+  url                  String?
+  aiSummary            String?              @map("ai_summary") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Unique constraint: one recall number per source
+  @@unique([source, recallNumber], name: "source_recall_number")
+
+  // Indexes for common query patterns
+  @@index([reportDate], name: "idx_report_date")
+  @@index([productCategory], name: "idx_product_category")
+  @@index([reasonCategory], name: "idx_reason_category")
+  @@index([classification], name: "idx_classification")
+  @@index([source], name: "idx_source")
+
+  // GIN index for array containment on distribution_states
+  // (Prisma does not support GIN natively — apply via raw SQL migration)
+
+  @@map("recall_events")
+}
+
+// ---------------------------------------------------------------------------
+// AlertSubscriber
+// ---------------------------------------------------------------------------
+
+model AlertSubscriber {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  state      String
+  categories String[]
+  verified   Boolean  @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("alert_subscribers")
+}
+
+// ---------------------------------------------------------------------------
+// SyncLog
+// ---------------------------------------------------------------------------
+
+model SyncLog {
+  id              String    @id @default(cuid())
+  source          String
+  startedAt       DateTime  @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  recordsFetched  Int       @default(0) @map("records_fetched")
+  recordsUpserted Int       @default(0) @map("records_upserted")
+  recordsSkipped  Int       @default(0) @map("records_skipped")
+  errors          Int       @default(0)
+  errorDetails    Json?     @map("error_details")
+  status          String    @default("running")
+
+  @@map("sync_logs")
+}

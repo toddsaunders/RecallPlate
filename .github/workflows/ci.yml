@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, Type Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build
+        run: npm run build
+        env:
+          # Provide dummy env vars so the build succeeds without a real database.
+          # These are NOT used at runtime — env.ts validates lazily, not at build time.
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          OPENFDA_API_KEY: "dummy"
+          ANTHROPIC_API_KEY: "dummy"
+          NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+          CRON_SECRET: "dummy-cron-secret-for-ci-build"
