@@ -257,34 +257,87 @@ export async function fetchTimeline(params?: FilterParams): Promise<TimelineData
 
   // Mock fallback — always recompute from filtered recalls
   const filtered = filterMockRecalls(MOCK_RECALLS, params);
-  const byDate: Record<string, TimelineDataPoint> = {};
-
-  for (const r of filtered) {
-    const date = r.reportDate.split("T")[0];
-    if (!byDate[date]) {
-      byDate[date] = { date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
-    }
-    byDate[date].count++;
-    if (r.source === "FDA") byDate[date].fdaCount++;
-    else byDate[date].usdaCount++;
-    if (r.classification === "I") byDate[date].classI++;
-    else if (r.classification === "II") byDate[date].classII++;
-    else byDate[date].classIII++;
-  }
-
-  // Fill in empty days so the chart has a continuous x-axis
   const days = params?.days || 30;
+
+  // Determine bucket interval: 30d → daily, 90d → weekly, 12mo/All → monthly
+  const bucketFn =
+    days <= 30
+      ? (d: Date) => d.toISOString().split("T")[0] // daily: "2026-02-28"
+      : days <= 90
+        ? (d: Date) => {
+            // weekly: start of ISO week (Monday)
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d);
+            monday.setDate(diff);
+            return monday.toISOString().split("T")[0];
+          }
+        : (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; // monthly: "2026-02"
+
+  // Label formatter for x-axis
+  const labelFn =
+    days <= 30
+      ? (key: string) => key // "2026-02-28"
+      : days <= 90
+        ? (key: string) => `Week of ${key.slice(5)}` // "Week of 02-28"
+        : (key: string) => {
+            const [y, m] = key.split("-");
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${months[parseInt(m, 10) - 1]} ${y}`;
+          };
+
+  // Bucket recalls
+  const buckets: Record<string, TimelineDataPoint> = {};
+  for (const r of filtered) {
+    const key = bucketFn(new Date(r.reportDate));
+    if (!buckets[key]) {
+      buckets[key] = { date: labelFn(key), count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+    }
+    buckets[key].count++;
+    if (r.source === "FDA") buckets[key].fdaCount++;
+    else buckets[key].usdaCount++;
+    if (r.classification === "I") buckets[key].classI++;
+    else if (r.classification === "II") buckets[key].classII++;
+    else buckets[key].classIII++;
+  }
+
+  // Fill in empty buckets for continuous x-axis
   const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
-    if (!byDate[dateStr]) {
-      byDate[dateStr] = { date: dateStr, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+  const start = new Date(now);
+  start.setDate(start.getDate() - (days || 365));
+
+  if (days <= 30) {
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = bucketFn(d);
+      if (!buckets[key]) {
+        buckets[key] = { date: labelFn(key), count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+      }
+    }
+  } else if (days <= 90) {
+    for (let i = days - 1; i >= 0; i -= 7) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = bucketFn(d);
+      if (!buckets[key]) {
+        buckets[key] = { date: labelFn(key), count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+      }
+    }
+  } else {
+    const months = days > 0 ? Math.ceil(days / 30) : 12;
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = bucketFn(d);
+      if (!buckets[key]) {
+        buckets[key] = { date: labelFn(key), count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+      }
     }
   }
 
-  return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+  return Object.entries(buckets)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => v);
 }
 
 // ---------------------------------------------------------------------------
