@@ -342,25 +342,31 @@ export function DashboardClient() {
   // Summary cards
   const summaryCards: SummaryCardData[] = useMemo(() => {
     if (!stats) return [];
+
+    const pctChange = (current: number, prev: number | undefined) => {
+      if (prev === undefined || prev === 0) return undefined;
+      return Math.round(((current - prev) / prev) * 100);
+    };
+
     return [
       {
         label: "Active Recalls",
         value: stats.totalActiveRecalls.toLocaleString(),
-        change: 12,
+        change: pctChange(stats.totalActiveRecalls, stats.prevTotalActiveRecalls),
         sparklineData: timeline.map((t) => t.count),
         accentColor: "var(--color-danger)",
       },
       {
         label: "FDA Recalls",
         value: stats.fdaCount.toLocaleString(),
-        change: 8,
+        change: pctChange(stats.fdaCount, stats.prevFdaCount),
         sparklineData: timeline.map((t) => t.classI + t.classII),
         accentColor: "var(--color-source-fda)",
       },
       {
         label: "USDA Recalls",
         value: stats.usdaCount.toLocaleString(),
-        change: -3,
+        change: pctChange(stats.usdaCount, stats.prevUsdaCount),
         sparklineData: timeline.map((t) => t.classIII),
         accentColor: "var(--color-source-usda)",
       },

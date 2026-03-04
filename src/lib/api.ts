@@ -133,12 +133,35 @@ export async function fetchStats(params?: FilterParams): Promise<DashboardStats>
   }
   const topReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
 
+  // Compute previous period for period-over-period comparison
+  let prevTotalActiveRecalls: number | undefined;
+  let prevFdaCount: number | undefined;
+  let prevUsdaCount: number | undefined;
+
+  if (params?.days) {
+    const prevFiltered = filterMockRecalls(MOCK_RECALLS, {
+      ...params,
+      days: params.days * 2, // get double the range
+    }).filter((r) => {
+      // Keep only recalls in the previous period (exclude current period)
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - params.days!);
+      return new Date(r.reportDate) < cutoff;
+    });
+    prevTotalActiveRecalls = prevFiltered.length;
+    prevFdaCount = prevFiltered.filter((r) => r.source === "FDA").length;
+    prevUsdaCount = prevFiltered.filter((r) => r.source === "USDA").length;
+  }
+
   return {
     totalActiveRecalls: filtered.length,
     fdaCount,
     usdaCount,
     topReasonCategory: topReason,
     lastUpdated: MOCK_DASHBOARD_STATS.lastUpdated,
+    prevTotalActiveRecalls,
+    prevFdaCount,
+    prevUsdaCount,
   };
 }
 

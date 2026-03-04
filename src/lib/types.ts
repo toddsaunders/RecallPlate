@@ -145,6 +145,10 @@ export interface DashboardStats {
   usdaCount: number;
   topReasonCategory: string;
   lastUpdated: string;
+  /** Period-over-period change percentages (vs. previous period of same length). */
+  prevTotalActiveRecalls?: number;
+  prevFdaCount?: number;
+  prevUsdaCount?: number;
 }
 
 /** State-level recall count for the choropleth map. */
