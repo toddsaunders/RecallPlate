@@ -8,6 +8,7 @@ import {
   ChevronDown,
   BarChart3,
   Table2,
+  ChevronsUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ import {
 } from "@/lib/api";
 import { stateCountsToMap } from "@/lib/mock-data";
 import { formatDate, truncate } from "@/lib/utils";
+import { US_STATES } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -362,6 +364,29 @@ export function DashboardClient() {
                 {range.label}
               </button>
             ))}
+          </div>
+
+          {/* State picker */}
+          <div className="relative">
+            <select
+              value={selectedState ?? ""}
+              onChange={(e) => setSelectedState(e.target.value || null)}
+              className={cn(
+                "appearance-none rounded-lg border border-border bg-white py-1.5 pl-3 pr-8 text-xs font-medium",
+                "transition-colors duration-[var(--duration-micro)]",
+                "focus:outline-none focus:ring-2 focus:ring-folder-blue/30",
+                selectedState ? "text-text-primary" : "text-text-secondary"
+              )}
+              aria-label="Filter by state"
+            >
+              <option value="">All States</option>
+              {US_STATES.map((s) => (
+                <option key={s.abbreviation} value={s.abbreviation}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <ChevronsUpDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
           </div>
 
           {/* Active filters */}
