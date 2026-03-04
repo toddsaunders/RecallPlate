@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import type { TimelineDataPoint } from "@/lib/types";
+import { ChartTooltip } from "./ChartTooltip";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -118,14 +119,7 @@ export function TimelineChart({
             axisLine={false}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "var(--color-canvas-dark)",
-              border: "none",
-              borderRadius: "var(--radius-md)",
-              color: "var(--color-text-on-dark)",
-              fontSize: 13,
-            }}
-            labelStyle={{ color: "var(--color-text-on-dark)", opacity: 0.7 }}
+            content={<ChartTooltip countKey="displayCount" />}
           />
           <Area
             type="monotone"

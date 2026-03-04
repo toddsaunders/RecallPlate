@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import type { SeverityDistribution } from "@/lib/types";
+import { ChartTooltip } from "./ChartTooltip";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -122,13 +123,7 @@ export function SeverityDonut({ data, onSegmentClick, className }: SeverityDonut
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{
-              backgroundColor: "var(--color-canvas-dark)",
-              border: "none",
-              borderRadius: "var(--radius-md)",
-              color: "var(--color-text-on-dark)",
-              fontSize: 13,
-            }}
+            content={<ChartTooltip labelOverride={(d) => `Class ${d.classification}: ${d.label}`} />}
           />
           <Legend content={() => null} />
         </PieChart>

@@ -159,6 +159,8 @@ export interface StateRecallCount {
 export interface CategoryBreakdown {
   category: string;
   count: number;
+  fdaCount: number;
+  usdaCount: number;
   color: string;
 }
 
@@ -167,6 +169,8 @@ export interface SeverityDistribution {
   classification: RecallClassification;
   label: string;
   count: number;
+  fdaCount: number;
+  usdaCount: number;
   percentage: number;
 }
 
@@ -174,6 +178,8 @@ export interface SeverityDistribution {
 export interface TimelineDataPoint {
   date: string;
   count: number;
+  fdaCount: number;
+  usdaCount: number;
   classI: number;
   classII: number;
   classIII: number;

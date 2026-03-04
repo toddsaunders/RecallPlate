@@ -488,20 +488,20 @@ export const MOCK_STATE_COUNTS: StateRecallCount[] = [
 // ---------------------------------------------------------------------------
 
 export const MOCK_CATEGORY_BREAKDOWN: CategoryBreakdown[] = [
-  { category: "Meat & Poultry", count: 32, color: "#E63B2E" },
-  { category: "Fruits & Vegetables", count: 24, color: "#0E8A7D" },
-  { category: "Dairy & Eggs", count: 18, color: "#E6C820" },
-  { category: "Grains & Bakery", count: 14, color: "#F28C28" },
-  { category: "Seafood & Fish", count: 12, color: "#2B5CE6" },
-  { category: "Snacks & Candy", count: 10, color: "#D94F8A" },
-  { category: "Prepared/Frozen Meals", count: 9, color: "#7B3FA0" },
-  { category: "Condiments & Sauces", count: 7, color: "#E63B2E" },
-  { category: "Baby Food & Formula", count: 5, color: "#D94F8A" },
-  { category: "Supplements & Vitamins", count: 4, color: "#0E8A7D" },
-  { category: "Beverages", count: 3, color: "#2B5CE6" },
-  { category: "Nuts & Seeds", count: 2, color: "#F28C28" },
-  { category: "Pet Food", count: 1, color: "#E6C820" },
-  { category: "Other", count: 1, color: "#1A1A1E" },
+  { category: "Meat & Poultry", count: 32, fdaCount: 12, usdaCount: 20, color: "#E63B2E" },
+  { category: "Fruits & Vegetables", count: 24, fdaCount: 20, usdaCount: 4, color: "#0E8A7D" },
+  { category: "Dairy & Eggs", count: 18, fdaCount: 14, usdaCount: 4, color: "#E6C820" },
+  { category: "Grains & Bakery", count: 14, fdaCount: 11, usdaCount: 3, color: "#F28C28" },
+  { category: "Seafood & Fish", count: 12, fdaCount: 9, usdaCount: 3, color: "#2B5CE6" },
+  { category: "Snacks & Candy", count: 10, fdaCount: 9, usdaCount: 1, color: "#D94F8A" },
+  { category: "Prepared/Frozen Meals", count: 9, fdaCount: 4, usdaCount: 5, color: "#7B3FA0" },
+  { category: "Condiments & Sauces", count: 7, fdaCount: 6, usdaCount: 1, color: "#E63B2E" },
+  { category: "Baby Food & Formula", count: 5, fdaCount: 5, usdaCount: 0, color: "#D94F8A" },
+  { category: "Supplements & Vitamins", count: 4, fdaCount: 4, usdaCount: 0, color: "#0E8A7D" },
+  { category: "Beverages", count: 3, fdaCount: 3, usdaCount: 0, color: "#2B5CE6" },
+  { category: "Nuts & Seeds", count: 2, fdaCount: 2, usdaCount: 0, color: "#F28C28" },
+  { category: "Pet Food", count: 1, fdaCount: 1, usdaCount: 0, color: "#E6C820" },
+  { category: "Other", count: 1, fdaCount: 0, usdaCount: 1, color: "#1A1A1E" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -513,18 +513,24 @@ export const MOCK_SEVERITY_DISTRIBUTION: SeverityDistribution[] = [
     classification: "I",
     label: "Serious Health Risk",
     count: 48,
+    fdaCount: 30,
+    usdaCount: 18,
     percentage: 33.8,
   },
   {
     classification: "II",
     label: "Remote Health Risk",
     count: 68,
+    fdaCount: 45,
+    usdaCount: 23,
     percentage: 47.9,
   },
   {
     classification: "III",
     label: "Not Likely Harmful",
     count: 26,
+    fdaCount: 23,
+    usdaCount: 3,
     percentage: 18.3,
   },
 ];
@@ -546,10 +552,14 @@ function generateTimelineData(): TimelineDataPoint[] {
     const classII = Math.floor(Math.random() * 6) + 2;
     const classIII = Math.floor(Math.random() * 3);
     const total = classI + classII + classIII;
+    const fdaCount = Math.floor(total * 0.65) + Math.floor(Math.random() * 2);
+    const usdaCount = total - fdaCount;
 
     points.push({
       date: dateStr,
       count: total,
+      fdaCount: Math.max(0, fdaCount),
+      usdaCount: Math.max(0, usdaCount),
       classI,
       classII,
       classIII,
