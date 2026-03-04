@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 export interface FilterOption {
   value: string;
   label: string;
+  icon?: React.ReactNode;
 }
 
 interface FilterDropdownProps {
@@ -51,7 +52,9 @@ export function FilterDropdown({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label;
+  const selectedOption = options.find((o) => o.value === value);
+  const selectedLabel = selectedOption?.label;
+  const selectedIcon = selectedOption?.icon;
 
   const handleSelect = useCallback(
     (optionValue: string) => {
@@ -85,6 +88,11 @@ export function FilterDropdown({
         aria-expanded={open}
         aria-haspopup="listbox"
       >
+        {selectedIcon && (
+          <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-text-secondary">
+            {selectedIcon}
+          </span>
+        )}
         <span className="max-w-[140px] truncate">
           {selectedLabel ?? placeholder}
         </span>
@@ -146,10 +154,19 @@ export function FilterDropdown({
                   role="option"
                   aria-selected={isSelected}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    {isSelected && <Check className="h-3.5 w-3.5" />}
-                  </span>
-                  <span className="truncate">{option.label}</span>
+                  {option.icon ? (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center text-text-secondary">
+                      {option.icon}
+                    </span>
+                  ) : (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                      {isSelected && <Check className="h-3.5 w-3.5" />}
+                    </span>
+                  )}
+                  <span className="flex-1 truncate">{option.label}</span>
+                  {option.icon && isSelected && (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-text-secondary" />
+                  )}
                 </button>
               );
             })}

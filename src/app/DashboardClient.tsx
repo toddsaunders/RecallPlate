@@ -8,6 +8,24 @@ import {
   ChevronDown,
   BarChart3,
   Table2,
+  Egg,
+  Beef,
+  Fish,
+  Apple,
+  Wheat,
+  Candy,
+  CupSoda,
+  Nut,
+  UtensilsCrossed,
+  Droplets,
+  Baby,
+  Pill,
+  PawPrint,
+  Package,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -79,13 +97,47 @@ const STATE_OPTIONS: FilterOption[] = US_STATES.map((s) => ({
   label: s.name,
 }));
 
-const CATEGORY_OPTIONS: FilterOption[] = PRODUCT_CATEGORIES.map((cat) => ({
-  value: cat,
-  label: cat,
-}));
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  "Dairy & Eggs": Egg,
+  "Meat & Poultry": Beef,
+  "Seafood & Fish": Fish,
+  "Fruits & Vegetables": Apple,
+  "Grains & Bakery": Wheat,
+  "Snacks & Candy": Candy,
+  "Beverages": CupSoda,
+  "Nuts & Seeds": Nut,
+  "Prepared/Frozen Meals": UtensilsCrossed,
+  "Condiments & Sauces": Droplets,
+  "Baby Food & Formula": Baby,
+  "Supplements & Vitamins": Pill,
+  "Pet Food": PawPrint,
+  "Other": Package,
+};
+
+const CATEGORY_OPTIONS: FilterOption[] = PRODUCT_CATEGORIES.map((cat) => {
+  const Icon = CATEGORY_ICONS[cat];
+  return {
+    value: cat,
+    label: cat,
+    icon: Icon ? <Icon className="h-4 w-4" /> : undefined,
+  };
+});
+
+const SEVERITY_ICON_MAP: Record<string, { Icon: LucideIcon; color: string }> = {
+  I: { Icon: ShieldAlert, color: "text-red-500" },
+  II: { Icon: ShieldOff, color: "text-amber-500" },
+  III: { Icon: ShieldCheck, color: "text-emerald-500" },
+};
 
 const SEVERITY_OPTIONS: FilterOption[] = Object.entries(SEVERITY_LABELS).map(
-  ([key, label]) => ({ value: key, label: `Class ${key} — ${label}` })
+  ([key, label]) => {
+    const entry = SEVERITY_ICON_MAP[key];
+    return {
+      value: key,
+      label: `Class ${key} — ${label}`,
+      icon: entry ? <entry.Icon className={cn("h-4 w-4", entry.color)} /> : undefined,
+    };
+  }
 );
 
 // ---------------------------------------------------------------------------
