@@ -19,6 +19,8 @@ import { ChartTooltip } from "./ChartTooltip";
 
 interface SeverityDonutProps {
   data: SeverityDistribution[];
+  /** Currently selected classification (highlighted). */
+  selectedClassification?: string | null;
   /** Click handler for a severity segment. */
   onSegmentClick?: (classification: string) => void;
   className?: string;
@@ -44,11 +46,15 @@ interface LegendItemProps {
   count: number;
   percentage: number;
   color: string;
+  isActive?: boolean;
 }
 
-function DonutLegendItem({ classification, label, count, percentage, color }: LegendItemProps) {
+function DonutLegendItem({ classification, label, count, percentage, color, isActive }: LegendItemProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn(
+      "flex items-center gap-2 rounded-md px-2 py-1 transition-opacity duration-150",
+      isActive === false ? "opacity-40" : "opacity-100",
+    )}>
       <span
         className="h-3 w-3 shrink-0 rounded-sm"
         style={{ backgroundColor: color }}
@@ -71,7 +77,7 @@ function DonutLegendItem({ classification, label, count, percentage, color }: Le
 // Component
 // ---------------------------------------------------------------------------
 
-export function SeverityDonut({ data, onSegmentClick, className }: SeverityDonutProps) {
+export function SeverityDonut({ data, selectedClassification, onSegmentClick, className }: SeverityDonutProps) {
   const chartData = useMemo(
     () =>
       data.map((d) => ({
@@ -118,9 +124,18 @@ export function SeverityDonut({ data, onSegmentClick, className }: SeverityDonut
             onClick={handleClick}
             style={onSegmentClick ? { cursor: "pointer" } : undefined}
           >
-            {chartData.map((entry) => (
-              <Cell key={entry.classification} fill={entry.color} />
-            ))}
+            {chartData.map((entry) => {
+              const isActive = !selectedClassification || entry.classification === selectedClassification;
+              return (
+                <Cell
+                  key={entry.classification}
+                  fill={entry.color}
+                  fillOpacity={isActive ? 1 : 0.25}
+                  stroke={entry.classification === selectedClassification ? entry.color : "none"}
+                  strokeWidth={entry.classification === selectedClassification ? 3 : 0}
+                />
+              );
+            })}
           </Pie>
           <Tooltip
             content={<ChartTooltip labelOverride={(d) => `Class ${d.classification}: ${d.label}`} />}
@@ -130,7 +145,7 @@ export function SeverityDonut({ data, onSegmentClick, className }: SeverityDonut
       </ResponsiveContainer>
 
       {/* Custom legend below chart */}
-      <div className="mt-2 flex flex-col gap-2">
+      <div className="mt-2 flex flex-col gap-1">
         {chartData.map((item) => (
           <DonutLegendItem
             key={item.classification}
@@ -139,6 +154,7 @@ export function SeverityDonut({ data, onSegmentClick, className }: SeverityDonut
             count={item.count}
             percentage={item.percentage}
             color={item.color}
+            isActive={selectedClassification ? item.classification === selectedClassification : undefined}
           />
         ))}
       </div>

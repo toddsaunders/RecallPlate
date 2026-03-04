@@ -20,6 +20,8 @@ import { ChartTooltip } from "./ChartTooltip";
 
 interface CategoryBreakdownProps {
   data: CategoryBreakdownData[];
+  /** Currently selected category (highlighted). */
+  selectedCategory?: string | null;
   /** Click handler for a category bar. */
   onCategoryClick?: (category: string) => void;
   className?: string;
@@ -31,6 +33,7 @@ interface CategoryBreakdownProps {
 
 export function CategoryBreakdown({
   data,
+  selectedCategory,
   onCategoryClick,
   className,
 }: CategoryBreakdownProps) {
@@ -88,9 +91,18 @@ export function CategoryBreakdown({
             }}
             style={onCategoryClick ? { cursor: "pointer" } : undefined}
           >
-            {sortedData.map((entry) => (
-              <Cell key={entry.category} fill={entry.color} />
-            ))}
+            {sortedData.map((entry) => {
+              const isActive = !selectedCategory || entry.category === selectedCategory;
+              return (
+                <Cell
+                  key={entry.category}
+                  fill={entry.color}
+                  fillOpacity={isActive ? 1 : 0.25}
+                  stroke={entry.category === selectedCategory ? entry.color : "none"}
+                  strokeWidth={entry.category === selectedCategory ? 2 : 0}
+                />
+              );
+            })}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

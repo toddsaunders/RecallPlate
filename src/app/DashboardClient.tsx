@@ -546,7 +546,7 @@ export function DashboardClient() {
                 <div className="h-80 animate-pulse rounded bg-gray-100" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="320px">
-                  <CategoryBreakdownChart data={categories} onCategoryClick={handleCategoryClick} />
+                  <CategoryBreakdownChart data={categories} selectedCategory={selectedCategory} onCategoryClick={handleCategoryClick} />
                 </ChartErrorBoundary>
               )}
             </section>
@@ -557,7 +557,7 @@ export function DashboardClient() {
                 <div className="h-80 animate-pulse rounded bg-gray-100" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="320px">
-                  <SeverityDonut data={severity} onSegmentClick={handleSeverityClick} />
+                  <SeverityDonut data={severity} selectedClassification={selectedSeverity} onSegmentClick={handleSeverityClick} />
                 </ChartErrorBoundary>
               )}
             </section>
