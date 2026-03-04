@@ -243,7 +243,7 @@ export function DashboardClient() {
       const [statsData, stateData, catData, sevData, timeData, recallData] =
         await Promise.all([
           fetchStats(params),
-          fetchStateCounts({ days: timeRange.days || undefined }),
+          fetchStateCounts(params),
           fetchCategoryBreakdown(params),
           fetchSeverityDistribution(params),
           fetchTimeline(params),

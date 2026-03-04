@@ -59,83 +59,237 @@ async function tryApi<T>(url: string): Promise<T | null> {
 }
 
 // ---------------------------------------------------------------------------
-// Dashboard / Stats
+// Shared filter params
 // ---------------------------------------------------------------------------
 
-export async function fetchStats(params?: {
+interface FilterParams {
   days?: number;
   state?: string;
-}): Promise<DashboardStats> {
+  category?: string;
+  severity?: string;
+}
+
+function buildSearchParams(params?: FilterParams): URLSearchParams {
   const sp = new URLSearchParams();
   if (params?.days) sp.set("days", String(params.days));
   if (params?.state) sp.set("state", params.state);
+  if (params?.category) sp.set("category", params.category);
+  if (params?.severity) sp.set("severity", params.severity);
+  return sp;
+}
 
+/**
+ * Filter mock recalls by the common filter params.
+ * Returns a filtered copy of the input array.
+ */
+function filterMockRecalls(
+  recalls: RecallEventSerialized[],
+  params?: FilterParams
+): RecallEventSerialized[] {
+  let filtered = [...recalls];
+
+  if (params?.state) {
+    const states = params.state.split(",").map((s) => s.toUpperCase());
+    filtered = filtered.filter(
+      (r) =>
+        r.nationwide ||
+        states.some((st) => r.distributionStates.includes(st) || r.state === st)
+    );
+  }
+  if (params?.category) {
+    filtered = filtered.filter((r) => r.productCategory === params.category);
+  }
+  if (params?.severity) {
+    filtered = filtered.filter((r) => r.classification === params.severity);
+  }
+
+  return filtered;
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard / Stats
+// ---------------------------------------------------------------------------
+
+export async function fetchStats(params?: FilterParams): Promise<DashboardStats> {
+  const sp = buildSearchParams(params);
   const qs = sp.toString();
   const url = `/api/stats${qs ? `?${qs}` : ""}`;
 
   const data = await tryApi<DashboardStats>(url);
-  return data ?? MOCK_DASHBOARD_STATS;
+  if (data) return data;
+
+  // Mock fallback — compute from filtered recalls
+  const filtered = filterMockRecalls(MOCK_RECALLS, params);
+  const fdaCount = filtered.filter((r) => r.source === "FDA").length;
+  const usdaCount = filtered.filter((r) => r.source === "USDA").length;
+
+  // Find top reason category
+  const reasonCounts: Record<string, number> = {};
+  for (const r of filtered) {
+    reasonCounts[r.reasonCategory] = (reasonCounts[r.reasonCategory] || 0) + 1;
+  }
+  const topReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
+
+  return {
+    totalActiveRecalls: filtered.length,
+    fdaCount,
+    usdaCount,
+    topReasonCategory: topReason,
+    lastUpdated: MOCK_DASHBOARD_STATS.lastUpdated,
+  };
 }
 
-export async function fetchStateCounts(params?: {
-  days?: number;
-}): Promise<StateRecallCount[]> {
-  const sp = new URLSearchParams();
-  if (params?.days) sp.set("days", String(params.days));
-
+export async function fetchStateCounts(params?: FilterParams): Promise<StateRecallCount[]> {
+  const sp = buildSearchParams(params);
   const qs = sp.toString();
   const url = `/api/states${qs ? `?${qs}` : ""}`;
 
   const data = await tryApi<StateRecallCount[]>(url);
-  return data ?? MOCK_STATE_COUNTS;
+  if (data) return data;
+
+  // Mock fallback — if we have category/severity filters, recompute from recalls
+  if (params?.category || params?.severity) {
+    const filtered = filterMockRecalls(MOCK_RECALLS, {
+      ...params,
+      state: undefined, // don't filter by state for the state counts
+    });
+    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
+    for (const r of filtered) {
+      for (const st of r.distributionStates) {
+        if (!counts[st]) counts[st] = { count: 0, fdaCount: 0, usdaCount: 0 };
+        counts[st].count++;
+        if (r.source === "FDA") counts[st].fdaCount++;
+        else counts[st].usdaCount++;
+      }
+    }
+    return Object.entries(counts).map(([state, c]) => ({
+      state,
+      ...c,
+    }));
+  }
+
+  return MOCK_STATE_COUNTS;
 }
 
-export async function fetchCategoryBreakdown(params?: {
-  days?: number;
-  state?: string;
-}): Promise<CategoryBreakdown[]> {
-  const sp = new URLSearchParams();
-  if (params?.days) sp.set("days", String(params.days));
-  if (params?.state) sp.set("state", params.state);
+export async function fetchCategoryBreakdown(params?: FilterParams): Promise<CategoryBreakdown[]> {
+  const sp = buildSearchParams(params);
   sp.set("type", "categories");
-
-  const qs = sp.toString();
-  const url = `/api/recalls/stats?${qs}`;
+  const url = `/api/recalls/stats?${sp.toString()}`;
 
   const data = await tryApi<CategoryBreakdown[]>(url);
-  return data ?? MOCK_CATEGORY_BREAKDOWN;
+  if (data) return data;
+
+  // Mock fallback — recompute from filtered recalls
+  if (params?.state || params?.severity) {
+    const filtered = filterMockRecalls(MOCK_RECALLS, {
+      ...params,
+      category: undefined, // don't filter by category for category breakdown
+    });
+    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {};
+    for (const r of filtered) {
+      if (!counts[r.productCategory]) counts[r.productCategory] = { count: 0, fdaCount: 0, usdaCount: 0 };
+      counts[r.productCategory].count++;
+      if (r.source === "FDA") counts[r.productCategory].fdaCount++;
+      else counts[r.productCategory].usdaCount++;
+    }
+    // Get color from static mock data
+    const colorMap: Record<string, string> = {};
+    for (const d of MOCK_CATEGORY_BREAKDOWN) colorMap[d.category] = d.color;
+
+    return Object.entries(counts)
+      .map(([category, c]) => ({
+        category,
+        ...c,
+        color: colorMap[category] || "#6B7280",
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  return MOCK_CATEGORY_BREAKDOWN;
 }
 
-export async function fetchSeverityDistribution(params?: {
-  days?: number;
-  state?: string;
-}): Promise<SeverityDistribution[]> {
-  const sp = new URLSearchParams();
-  if (params?.days) sp.set("days", String(params.days));
-  if (params?.state) sp.set("state", params.state);
+export async function fetchSeverityDistribution(params?: FilterParams): Promise<SeverityDistribution[]> {
+  const sp = buildSearchParams(params);
   sp.set("type", "severity");
-
-  const qs = sp.toString();
-  const url = `/api/recalls/stats?${qs}`;
+  const url = `/api/recalls/stats?${sp.toString()}`;
 
   const data = await tryApi<SeverityDistribution[]>(url);
-  return data ?? MOCK_SEVERITY_DISTRIBUTION;
+  if (data) return data;
+
+  // Mock fallback — recompute from filtered recalls
+  if (params?.state || params?.category) {
+    const filtered = filterMockRecalls(MOCK_RECALLS, {
+      ...params,
+      severity: undefined, // don't filter by severity for severity distribution
+    });
+    const total = filtered.length || 1;
+    const labels: Record<string, string> = {
+      I: "Serious Health Risk",
+      II: "Remote Health Risk",
+      III: "Not Likely Harmful",
+    };
+    const counts: Record<string, { count: number; fdaCount: number; usdaCount: number }> = {
+      I: { count: 0, fdaCount: 0, usdaCount: 0 },
+      II: { count: 0, fdaCount: 0, usdaCount: 0 },
+      III: { count: 0, fdaCount: 0, usdaCount: 0 },
+    };
+    for (const r of filtered) {
+      if (counts[r.classification]) {
+        counts[r.classification].count++;
+        if (r.source === "FDA") counts[r.classification].fdaCount++;
+        else counts[r.classification].usdaCount++;
+      }
+    }
+    return (["I", "II", "III"] as const).map((cls) => ({
+      classification: cls,
+      label: labels[cls],
+      count: counts[cls].count,
+      fdaCount: counts[cls].fdaCount,
+      usdaCount: counts[cls].usdaCount,
+      percentage: (counts[cls].count / total) * 100,
+    }));
+  }
+
+  return MOCK_SEVERITY_DISTRIBUTION;
 }
 
-export async function fetchTimeline(params?: {
-  days?: number;
-  state?: string;
-}): Promise<TimelineDataPoint[]> {
-  const sp = new URLSearchParams();
-  if (params?.days) sp.set("days", String(params.days));
-  if (params?.state) sp.set("state", params.state);
+export async function fetchTimeline(params?: FilterParams): Promise<TimelineDataPoint[]> {
+  const sp = buildSearchParams(params);
   sp.set("type", "timeline");
-
-  const qs = sp.toString();
-  const url = `/api/recalls/stats?${qs}`;
+  const url = `/api/recalls/stats?${sp.toString()}`;
 
   const data = await tryApi<TimelineDataPoint[]>(url);
-  return data ?? MOCK_TIMELINE_DATA;
+  if (data) return data;
+
+  // Mock fallback — recompute from filtered recalls
+  if (params?.state || params?.category || params?.severity) {
+    const filtered = filterMockRecalls(MOCK_RECALLS, params);
+    const byDate: Record<string, TimelineDataPoint> = {};
+
+    for (const r of filtered) {
+      const date = r.reportDate.split("T")[0];
+      if (!byDate[date]) {
+        byDate[date] = { date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+      }
+      byDate[date].count++;
+      if (r.source === "FDA") byDate[date].fdaCount++;
+      else byDate[date].usdaCount++;
+      if (r.classification === "I") byDate[date].classI++;
+      else if (r.classification === "II") byDate[date].classII++;
+      else byDate[date].classIII++;
+    }
+
+    // Fill in dates from mock timeline that have no filtered data
+    for (const tp of MOCK_TIMELINE_DATA) {
+      if (!byDate[tp.date]) {
+        byDate[tp.date] = { date: tp.date, count: 0, fdaCount: 0, usdaCount: 0, classI: 0, classII: 0, classIII: 0 };
+      }
+    }
+
+    return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  return MOCK_TIMELINE_DATA;
 }
 
 // ---------------------------------------------------------------------------
@@ -179,9 +333,11 @@ export async function fetchRecalls(
     );
   }
   if (params?.state) {
-    const st = params.state.toUpperCase();
+    const states = params.state.split(",").map((s) => s.toUpperCase());
     filtered = filtered.filter(
-      (r) => r.nationwide || r.distributionStates.includes(st) || r.state === st
+      (r) =>
+        r.nationwide ||
+        states.some((st) => r.distributionStates.includes(st) || r.state === st)
     );
   }
   if (params?.category) {
