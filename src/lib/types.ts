@@ -123,6 +123,7 @@ export interface AlertSignupRequest {
   email: string;
   state: string;
   categories?: string[];
+  brands?: string[];
 }
 
 // ---------------------------------------------------------------------------

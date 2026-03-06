@@ -127,10 +127,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, state, categories } = body as {
+    const { email, state, categories, brands } = body as {
       email?: unknown;
       state?: unknown;
       categories?: unknown;
+      brands?: unknown;
     };
 
     // -- Validate email -----------------------------------------------------
@@ -187,6 +188,34 @@ export async function POST(request: NextRequest) {
       normalizedCategories = categories as string[];
     }
 
+    // -- Validate brands (optional) -----------------------------------------
+    let normalizedBrands: string[] = [];
+    if (brands !== undefined && brands !== null) {
+      if (!Array.isArray(brands)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "`brands` must be an array of brand name strings.",
+          },
+          { status: 400 }
+        );
+      }
+
+      for (const brand of brands) {
+        if (typeof brand !== "string" || brand.trim().length === 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Each brand must be a non-empty string.",
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      normalizedBrands = (brands as string[]).map((b) => b.trim());
+    }
+
     // -- Upsert subscriber --------------------------------------------------
     const subscriber = await db.alertSubscriber.upsert({
       where: { email: normalizedEmail },
@@ -194,10 +223,12 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         state: normalizedState,
         categories: normalizedCategories,
+        brands: normalizedBrands,
       },
       update: {
         state: normalizedState,
         categories: normalizedCategories,
+        brands: normalizedBrands,
       },
     });
 

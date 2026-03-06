@@ -7,6 +7,7 @@ import {
   X,
   Filter,
   ChevronDown,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -54,8 +55,10 @@ export function SearchClient() {
   const [selectedSeverities, setSelectedSeverities] = useState<string[]>(initialSeverities);
   const [selectedSource, setSelectedSource] = useState<RecallSource | null>(initialSource);
   const [selectedReasons, setSelectedReasons] = useState<string[]>(initialReasons);
+  const initialBrand = searchParams.get("brand") || "";
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo);
+  const [brand, setBrand] = useState(initialBrand);
   const [showFilters, setShowFilters] = useState(false);
   const [stateSearch, setStateSearch] = useState("");
 
@@ -79,7 +82,11 @@ export function SearchClient() {
         sort: "date",
         order: "desc",
       };
-      if (query.length >= 2) params.q = query;
+      // Combine free-text query with brand filter
+      const queryParts: string[] = [];
+      if (query.length >= 2) queryParts.push(query);
+      if (brand.trim()) queryParts.push(brand.trim());
+      if (queryParts.length > 0) params.q = queryParts.join(" ");
       if (selectedStates.length === 1) params.state = selectedStates[0];
       if (selectedCategories.length === 1) params.category = selectedCategories[0];
       if (selectedSeverities.length === 1)
@@ -90,7 +97,7 @@ export function SearchClient() {
       if (dateTo) params.dateTo = dateTo;
       return params;
     },
-    [query, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo]
+    [query, brand, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo]
   );
 
   // Update URL to reflect current search state
@@ -104,10 +111,11 @@ export function SearchClient() {
     if (selectedReasons.length) sp.set("reason", selectedReasons.join(","));
     if (dateFrom) sp.set("dateFrom", dateFrom);
     if (dateTo) sp.set("dateTo", dateTo);
+    if (brand) sp.set("brand", brand);
 
     const qs = sp.toString();
     router.replace(`/search${qs ? `?${qs}` : ""}`, { scroll: false });
-  }, [router, query, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo]);
+  }, [router, query, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo, brand]);
 
   // Execute search
   const executeSearch = useCallback(async () => {
@@ -119,7 +127,8 @@ export function SearchClient() {
       selectedSource !== null ||
       selectedReasons.length > 0 ||
       dateFrom ||
-      dateTo;
+      dateTo ||
+      brand.trim();
 
     if (!needsQuery && !hasFilters) {
       setResults([]);
@@ -142,7 +151,7 @@ export function SearchClient() {
     } finally {
       setLoading(false);
     }
-  }, [query, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo, buildParams, syncURL]);
+  }, [query, brand, selectedStates, selectedCategories, selectedSeverities, selectedSource, selectedReasons, dateFrom, dateTo, buildParams, syncURL]);
 
   // Debounced search on query change
   useEffect(() => {
@@ -205,6 +214,7 @@ export function SearchClient() {
     setSelectedReasons([]);
     setDateFrom("");
     setDateTo("");
+    setBrand("");
     setResults([]);
     setTotalResults(0);
     setHasSearched(false);
@@ -220,7 +230,8 @@ export function SearchClient() {
     (selectedSource ? 1 : 0) +
     selectedReasons.length +
     (dateFrom ? 1 : 0) +
-    (dateTo ? 1 : 0);
+    (dateTo ? 1 : 0) +
+    (brand.trim() ? 1 : 0);
 
   // Filtered state list for typeahead
   const filteredStates = useMemo(() => {
@@ -357,6 +368,17 @@ export function SearchClient() {
               <X className="h-3 w-3" />
             </button>
           ))}
+          {brand.trim() && (
+            <button
+              type="button"
+              onClick={() => setBrand("")}
+              className="inline-flex items-center gap-1 rounded-full bg-folder-blue/10 px-2.5 py-1 text-xs font-medium text-folder-blue"
+            >
+              <Store className="h-3 w-3" />
+              {brand}
+              <X className="h-3 w-3" />
+            </button>
+          )}
           {(dateFrom || dateTo) && (
             <button
               type="button"
@@ -541,6 +563,27 @@ export function SearchClient() {
                   >
                     Both
                   </button>
+                </div>
+              </div>
+
+              {/* Brand */}
+              <div>
+                <label
+                  htmlFor="search-brand"
+                  className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-secondary"
+                >
+                  Brand / Company
+                </label>
+                <div className="relative">
+                  <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <input
+                    id="search-brand"
+                    type="text"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    placeholder="e.g. Fresh Fields Organics"
+                    className="w-full rounded-md border border-border bg-page-bg py-2 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-1 focus:ring-folder-blue/40"
+                  />
                 </div>
               </div>
 

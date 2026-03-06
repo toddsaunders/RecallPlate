@@ -66,12 +66,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: data.map(serializeRecallEvent),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      total,
+      page,
+      limit,
+      totalPages,
     });
   } catch (error) {
     console.error("[GET /api/recalls] Error:", error);

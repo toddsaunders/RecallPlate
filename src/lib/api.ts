@@ -44,16 +44,27 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 /**
  * Try a real API call. If the route returns 501 (not implemented),
  * return null so the caller can fall back to mock data.
+ * Also validates the response shape with an optional guard function.
  */
-async function tryApi<T>(url: string): Promise<T | null> {
+async function tryApi<T>(url: string, validate?: (data: unknown) => data is T): Promise<T | null> {
   try {
     const res = await fetch(url);
     if (res.status === 501) return null;
     if (!res.ok) return null;
-    return res.json() as Promise<T>;
+    const data = await res.json();
+    if (validate && !validate(data)) return null;
+    return data as T;
   } catch {
     return null;
   }
+}
+
+function isArray(data: unknown): data is unknown[] {
+  return Array.isArray(data);
+}
+
+function isObject(data: unknown): data is Record<string, unknown> {
+  return data !== null && typeof data === "object" && !Array.isArray(data);
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +129,7 @@ export async function fetchStats(params?: FilterParams): Promise<DashboardStats>
   const qs = sp.toString();
   const url = `/api/stats${qs ? `?${qs}` : ""}`;
 
-  const data = await tryApi<DashboardStats>(url);
+  const data = await tryApi<DashboardStats>(url, (d): d is DashboardStats => isObject(d) && "totalActiveRecalls" in d);
   if (data) return data;
 
   // Mock fallback — compute from filtered recalls
@@ -170,7 +181,7 @@ export async function fetchStateCounts(params?: FilterParams): Promise<StateReca
   const qs = sp.toString();
   const url = `/api/states${qs ? `?${qs}` : ""}`;
 
-  const data = await tryApi<StateRecallCount[]>(url);
+  const data = await tryApi<StateRecallCount[]>(url, (d): d is StateRecallCount[] => isArray(d));
   if (data) return data;
 
   // Mock fallback — always recompute from filtered recalls
@@ -202,7 +213,7 @@ export async function fetchCategoryBreakdown(params?: FilterParams): Promise<Cat
   sp.set("type", "categories");
   const url = `/api/recalls/stats?${sp.toString()}`;
 
-  const data = await tryApi<CategoryBreakdown[]>(url);
+  const data = await tryApi<CategoryBreakdown[]>(url, (d): d is CategoryBreakdown[] => isArray(d));
   if (data) return data;
 
   // Mock fallback — always recompute from filtered recalls
@@ -234,7 +245,7 @@ export async function fetchSeverityDistribution(params?: FilterParams): Promise<
   sp.set("type", "severity");
   const url = `/api/recalls/stats?${sp.toString()}`;
 
-  const data = await tryApi<SeverityDistribution[]>(url);
+  const data = await tryApi<SeverityDistribution[]>(url, (d): d is SeverityDistribution[] => isArray(d));
   if (data) return data;
 
   // Mock fallback — always recompute from filtered recalls
@@ -275,7 +286,7 @@ export async function fetchTimeline(params?: FilterParams): Promise<TimelineData
   sp.set("type", "timeline");
   const url = `/api/recalls/stats?${sp.toString()}`;
 
-  const data = await tryApi<TimelineDataPoint[]>(url);
+  const data = await tryApi<TimelineDataPoint[]>(url, (d): d is TimelineDataPoint[] => isArray(d));
   if (data) return data;
 
   // Mock fallback — always recompute from filtered recalls
@@ -387,7 +398,7 @@ export async function fetchRecalls(
   const qs = sp.toString();
   const url = `/api/recalls${qs ? `?${qs}` : ""}`;
 
-  const data = await tryApi<PaginatedResponse<RecallEventSerialized>>(url);
+  const data = await tryApi<PaginatedResponse<RecallEventSerialized>>(url, (d): d is PaginatedResponse<RecallEventSerialized> => isObject(d) && "data" in d && "total" in d && (d as Record<string, unknown>)["total"] as number > 0);
   if (data) return data;
 
   // Mock: filter and paginate locally

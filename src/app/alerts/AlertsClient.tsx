@@ -8,6 +8,8 @@ import {
   AlertCircle,
   Mail,
   MapPin,
+  Store,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { US_STATES, PRODUCT_CATEGORIES } from "@/lib/constants";
@@ -29,6 +31,8 @@ export function AlertsClient() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [brandInput, setBrandInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +52,18 @@ export function AlertsClient() {
     );
   };
 
+  const addBrand = () => {
+    const trimmed = brandInput.trim();
+    if (trimmed && !brands.includes(trimmed)) {
+      setBrands((prev) => [...prev, trimmed]);
+    }
+    setBrandInput("");
+  };
+
+  const removeBrand = (brand: string) => {
+    setBrands((prev) => prev.filter((b) => b !== brand));
+  };
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -64,6 +80,7 @@ export function AlertsClient() {
           email,
           state,
           categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+          brands: brands.length > 0 ? brands : undefined,
         });
         setSuccess(true);
       } catch (err) {
@@ -76,7 +93,7 @@ export function AlertsClient() {
         setSubmitting(false);
       }
     },
-    [email, state, selectedCategories, isFormValid]
+    [email, state, selectedCategories, brands, isFormValid]
   );
 
   return (
@@ -109,6 +126,8 @@ export function AlertsClient() {
                   setEmail("");
                   setState("");
                   setSelectedCategories([]);
+                  setBrands([]);
+                  setBrandInput("");
                   setEmailTouched(false);
                   setStateTouched(false);
                 }}
@@ -245,6 +264,62 @@ export function AlertsClient() {
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Brands (optional) */}
+              <div className="mb-6">
+                <label className="mb-1.5 block text-sm font-medium text-text-primary">
+                  Brands{" "}
+                  <span className="font-normal text-text-secondary">
+                    (optional - track specific brands)
+                  </span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                    <input
+                      type="text"
+                      value={brandInput}
+                      onChange={(e) => setBrandInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addBrand();
+                        }
+                      }}
+                      placeholder="e.g. Fresh Fields Organics"
+                      className="w-full rounded-md border border-border bg-page-bg py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-folder-blue/30"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addBrand}
+                    className="rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50"
+                  >
+                    Add
+                  </button>
+                </div>
+                {brands.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {brands.map((brand) => (
+                      <span
+                        key={brand}
+                        className="inline-flex items-center gap-1 rounded-full bg-folder-blue/10 px-2.5 py-1 text-xs font-medium text-folder-blue"
+                      >
+                        <Store className="h-3 w-3" />
+                        {brand}
+                        <button
+                          type="button"
+                          onClick={() => removeBrand(brand)}
+                          className="ml-0.5 hover:text-folder-blue/70"
+                          aria-label={`Remove ${brand}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Submit */}

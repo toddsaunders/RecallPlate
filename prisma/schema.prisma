@@ -79,6 +79,7 @@ model AlertSubscriber {
   email      String   @unique
   state      String
   categories String[]
+  brands     String[]
   verified   Boolean  @default(false)
 
   createdAt DateTime @default(now()) @map("created_at")
