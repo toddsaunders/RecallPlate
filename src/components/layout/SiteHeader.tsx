@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Bell, LayoutDashboard, Menu, X } from "lucide-react";
+import { Search, Bell, LayoutDashboard, Menu, X, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -15,6 +15,22 @@ const NAV_ITEMS = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("recallplate-dark-mode");
+    if (stored === "true") {
+      setDark(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const toggleDark = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("recallplate-dark-mode", String(next));
+  };
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -45,7 +61,7 @@ export function SiteHeader() {
                   "transition-colors duration-[var(--duration-micro)]",
                   active
                     ? "bg-canvas-dark text-text-on-dark"
-                    : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
+                    : "text-text-secondary hover:bg-border hover:text-text-primary"
                 )}
                 aria-current={active ? "page" : undefined}
               >
@@ -56,10 +72,25 @@ export function SiteHeader() {
           })}
         </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary hover:bg-gray-100 hover:text-text-primary sm:hidden"
+        <div className="flex items-center gap-1">
+          {/* Dark mode toggle */}
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary transition-colors duration-[var(--duration-micro)] hover:bg-border hover:text-text-primary"
+            onClick={toggleDark}
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {dark ? (
+              <Sun className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Moon className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary hover:bg-border hover:text-text-primary sm:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-nav"
@@ -70,7 +101,8 @@ export function SiteHeader() {
           ) : (
             <Menu className="h-5 w-5" aria-hidden="true" />
           )}
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Mobile nav dropdown */}
@@ -94,7 +126,7 @@ export function SiteHeader() {
                       "transition-colors duration-[var(--duration-micro)]",
                       active
                         ? "bg-canvas-dark text-text-on-dark"
-                        : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
+                        : "text-text-secondary hover:bg-border hover:text-text-primary"
                     )}
                     aria-current={active ? "page" : undefined}
                   >

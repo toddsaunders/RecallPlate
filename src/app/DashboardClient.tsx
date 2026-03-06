@@ -51,19 +51,19 @@ import { ChartErrorBoundary } from "@/components/ui/ChartErrorBoundary";
 // Lazy-loaded heavy components
 const USMap = dynamic(
   () => import("@/components/map/USMap").then((m) => m.USMap),
-  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded bg-gray-100" /> }
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded bg-border/40" /> }
 );
 const TimelineChart = dynamic(
   () => import("@/components/charts/TimelineChart").then((m) => m.TimelineChart),
-  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded bg-gray-100" /> }
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded bg-border/40" /> }
 );
 const CategoryBreakdownChart = dynamic(
   () => import("@/components/charts/CategoryBreakdown").then((m) => m.CategoryBreakdown),
-  { ssr: false, loading: () => <div className="h-80 animate-pulse rounded bg-gray-100" /> }
+  { ssr: false, loading: () => <div className="h-80 animate-pulse rounded bg-border/40" /> }
 );
 const SeverityDonut = dynamic(
   () => import("@/components/charts/SeverityDonut").then((m) => m.SeverityDonut),
-  { ssr: false, loading: () => <div className="h-80 animate-pulse rounded bg-gray-100" /> }
+  { ssr: false, loading: () => <div className="h-80 animate-pulse rounded bg-border/40" /> }
 );
 
 import {
@@ -383,7 +383,7 @@ export function DashboardClient() {
       <div className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-[var(--spacing-page-x-mobile)] py-3 sm:px-[var(--spacing-page-x)]">
           {/* View toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+          <div className="flex items-center gap-1 rounded-lg bg-border/40 p-1">
             <button
               type="button"
               onClick={() => setViewMode("dashboard")}
@@ -416,7 +416,7 @@ export function DashboardClient() {
           <div className="h-5 w-px bg-border" />
 
           {/* Time range */}
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+          <div className="flex items-center gap-1 rounded-lg bg-border/40 p-1">
             <Clock className="ml-2 h-3.5 w-3.5 text-text-secondary" aria-hidden="true" />
             {TIME_RANGES.map((range) => (
               <button
@@ -518,7 +518,7 @@ export function DashboardClient() {
             <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
               <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-text-secondary">Recalls by State</h2>
               {loading ? (
-                <div className="h-64 animate-pulse rounded bg-gray-100" />
+                <div className="h-64 animate-pulse rounded bg-border/40" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="256px">
                   <USMap data={mapData} highlightedStates={selectedStates.length > 0 ? selectedStates.map((abbr) => ABBREVIATION_TO_STATE_NAME[abbr] ?? abbr) : undefined} size="full" />
@@ -529,7 +529,7 @@ export function DashboardClient() {
             <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
               <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-text-secondary">Recall Timeline</h2>
               {loading ? (
-                <div className="h-64 animate-pulse rounded bg-gray-100" />
+                <div className="h-64 animate-pulse rounded bg-border/40" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="256px">
                   <TimelineChart data={timeline} />
@@ -543,7 +543,7 @@ export function DashboardClient() {
             <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] lg:col-span-2">
               <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-text-secondary">By Category</h2>
               {loading ? (
-                <div className="h-80 animate-pulse rounded bg-gray-100" />
+                <div className="h-80 animate-pulse rounded bg-border/40" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="320px">
                   <CategoryBreakdownChart data={categories} selectedCategory={selectedCategory} onCategoryClick={handleCategoryClick} />
@@ -554,7 +554,7 @@ export function DashboardClient() {
             <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
               <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-text-secondary">By Severity</h2>
               {loading ? (
-                <div className="h-80 animate-pulse rounded bg-gray-100" />
+                <div className="h-80 animate-pulse rounded bg-border/40" />
               ) : (
                 <ChartErrorBoundary fallbackHeight="320px">
                   <SeverityDonut data={severity} selectedClassification={selectedSeverity} onSegmentClick={handleSeverityClick} />
@@ -622,7 +622,7 @@ export function DashboardClient() {
                   className={cn(
                     "inline-flex items-center gap-2 rounded-md px-5 py-2 text-sm font-medium text-text-secondary",
                     "transition-colors duration-[var(--duration-micro)]",
-                    "hover:bg-gray-50 hover:text-text-primary",
+                    "hover:bg-border/40 hover:text-text-primary",
                     "disabled:cursor-not-allowed disabled:opacity-50"
                   )}
                 >

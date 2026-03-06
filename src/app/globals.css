@@ -94,6 +94,34 @@
   --duration-slide: 200ms;
 }
 
+/* --- Dark Mode Overrides --- */
+
+html.dark {
+  --color-text-primary: #E5E5E5;
+  --color-text-secondary: #9CA3AF;
+  --color-text-on-dark: #FFFFFF;
+  --color-border: #2D2D32;
+  --color-surface: #1A1A1E;
+  --color-page-bg: #111215;
+  --color-canvas-dark: #E5E5E5;
+
+  --color-severity-i-bg: #3B1010;
+  --color-severity-ii-bg: #3B2200;
+  --color-severity-iii-bg: #0A1E3B;
+
+  --color-source-fda-bg: #0F1A3B;
+  --color-source-usda-bg: #0A2B26;
+
+  --color-status-ongoing-bg: #3B2E00;
+  --color-status-completed-bg: #0A2B14;
+  --color-status-terminated-bg: #1F1F23;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-folder: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-folder-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 /* --- Base Styles --- */
 
 html {
@@ -145,7 +173,7 @@ body {
   line-height: 1.2;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #888888;
+  color: var(--color-text-secondary);
 }
 
 .text-table-body {

@@ -147,12 +147,12 @@ export function FilterDropdown(props: FilterDropdownProps) {
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium",
+          "inline-flex items-center gap-1.5 rounded-lg border bg-surface px-3 py-1.5 text-xs font-medium",
           "transition-all duration-150",
           "focus:outline-none focus:ring-2 focus:ring-folder-blue/30",
           open
-            ? "border-gray-300 shadow-sm"
-            : "border-border hover:border-gray-300 hover:shadow-sm",
+            ? "border-text-secondary/30 shadow-sm"
+            : "border-border hover:border-text-secondary/30 hover:shadow-sm",
           hasValue ? "text-text-primary" : "text-text-secondary"
         )}
         aria-label={ariaLabel}
@@ -177,7 +177,7 @@ export function FilterDropdown(props: FilterDropdownProps) {
       {/* Dropdown panel */}
       {open && (
         <div
-          className="absolute left-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/[0.06]"
+          className="absolute left-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl bg-surface py-1 shadow-lg ring-1 ring-black/[0.06]"
           role="listbox"
           aria-label={ariaLabel}
           aria-multiselectable={isMulti}
@@ -189,8 +189,8 @@ export function FilterDropdown(props: FilterDropdownProps) {
             className={cn(
               "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors duration-75",
               !hasValue
-                ? "bg-gray-50 font-medium text-text-primary"
-                : "text-text-secondary hover:bg-gray-50 hover:text-text-primary"
+                ? "bg-border/30 font-medium text-text-primary"
+                : "text-text-secondary hover:bg-border/30 hover:text-text-primary"
             )}
             role="option"
             aria-selected={!hasValue}
@@ -202,7 +202,7 @@ export function FilterDropdown(props: FilterDropdownProps) {
           </button>
 
           {/* Divider */}
-          <div className="mx-3 my-1 border-t border-gray-100" />
+          <div className="mx-3 my-1 border-t border-border" />
 
           {/* Options */}
           <div className="max-h-[280px] overflow-y-auto overscroll-contain">
@@ -216,8 +216,8 @@ export function FilterDropdown(props: FilterDropdownProps) {
                   className={cn(
                     "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors duration-75",
                     selected
-                      ? "bg-gray-50 font-medium text-text-primary"
-                      : "text-text-primary hover:bg-gray-50"
+                      ? "bg-border/30 font-medium text-text-primary"
+                      : "text-text-primary hover:bg-border/30"
                   )}
                   role="option"
                   aria-selected={selected}
